@@ -553,8 +553,8 @@ err:
 bool Log_to_csv_event_handler::
   log_slow(THD *thd, time_t current_time, time_t query_start_arg,
            const char *user_host, uint user_host_len,
-           ulonglong query_utime, ulonglong lock_utime, bool is_command,
-           const char *sql_text, uint sql_text_len)
+           ulonglong query_utime, ulonglong lock_utime, ulonglong exec_utime,
+           bool is_command, const char *sql_text, uint sql_text_len)
 {
   TABLE_LIST table_list;
   TABLE *table;
@@ -778,14 +778,15 @@ void Log_to_file_event_handler::init_pthread_objects()
 bool Log_to_file_event_handler::
   log_slow(THD *thd, time_t current_time, time_t query_start_arg,
            const char *user_host, uint user_host_len,
-           ulonglong query_utime, ulonglong lock_utime, bool is_command,
-           const char *sql_text, uint sql_text_len)
+           ulonglong query_utime, ulonglong lock_utime, ulonglong exec_utime,
+           bool is_command, const char *sql_text, uint sql_text_len)
 {
   Silence_log_table_errors error_handler;
   thd->push_internal_handler(&error_handler);
   bool retval= mysql_slow_log.write(thd, current_time, query_start_arg,
                                     user_host, user_host_len,
-                                    query_utime, lock_utime, is_command,
+                                    query_utime, lock_utime,
+                                    exec_utime, is_command,
                                     sql_text, sql_text_len);
   thd->pop_internal_handler();
   return retval;
@@ -1030,7 +1031,7 @@ bool LOGGER::slow_log_print(THD *thd, const char *query, uint query_length)
   char user_host_buff[MAX_USER_HOST_SIZE + 1];
   Security_context *sctx= thd->security_ctx;
   uint user_host_len= 0;
-  ulonglong query_utime, lock_utime, current_utime;
+  ulonglong query_utime, lock_utime, exec_utime, current_utime;
 
   DBUG_ASSERT(thd->enable_slow_log);
   /*
@@ -1068,10 +1069,11 @@ bool LOGGER::slow_log_print(THD *thd, const char *query, uint query_length)
     {
       query_utime= (current_utime - thd->start_utime);
       lock_utime=  (thd->utime_after_lock - thd->start_utime);
+      exec_utime= query_utime - lock_utime;
     }
     else
     {
-      query_utime= lock_utime= 0;
+      query_utime= lock_utime= exec_utime= 0;
     }
 
     if (!query)
@@ -1085,7 +1087,8 @@ bool LOGGER::slow_log_print(THD *thd, const char *query, uint query_length)
       error= (*current_handler++)->log_slow(thd, current_time,
                                             thd->start_time.tv_sec,
                                             user_host_buff, user_host_len,
-                                            query_utime, lock_utime, is_command,
+                                            query_utime, lock_utime,
+                                            exec_utime, is_command,
                                             query, query_length) || error;
 
     unlock();
@@ -1923,7 +1926,8 @@ err:
 bool MYSQL_QUERY_LOG::write(THD *thd, time_t current_time,
                             time_t query_start_arg, const char *user_host,
                             uint user_host_len, ulonglong query_utime,
-                            ulonglong lock_utime, bool is_command,
+                            ulonglong lock_utime, ulonglong exec_utime,
+                            bool is_command,
                             const char *sql_text, uint sql_text_len)
 {
   bool error= 0;
@@ -1941,7 +1945,7 @@ bool MYSQL_QUERY_LOG::write(THD *thd, time_t current_time,
   {						// Safety agains reopen
     int tmp_errno= 0;
     char buff[80], *end;
-    char query_time_buff[22+7], lock_time_buff[22+7];
+    char query_time_buff[22+7], lock_time_buff[22+7], exec_time_buff[22+7];
     uint buff_len;
     end= buff;
 
@@ -1971,10 +1975,11 @@ bool MYSQL_QUERY_LOG::write(THD *thd, time_t current_time,
     /* For slow query log */
     sprintf(query_time_buff, "%.6f", ulonglong2double(query_utime)/1000000.0);
     sprintf(lock_time_buff,  "%.6f", ulonglong2double(lock_utime)/1000000.0);
+    sprintf(exec_time_buff, "%.6f", ulonglong2double(exec_utime)/1000000.0);
     if (my_b_printf(&log_file,
-                    "# Query_time: %s  Lock_time: %s"
+                    "# Query_time: %s  Lock_time: %s Execution_time: %s"
                     " Rows_sent: %lu  Rows_examined: %lu\n",
-                    query_time_buff, lock_time_buff,
+                    query_time_buff, lock_time_buff, exec_time_buff,
                     (ulong) thd->get_sent_row_count(),
                     (ulong) thd->get_examined_row_count()) == (uint) -1)
       tmp_errno= errno;
