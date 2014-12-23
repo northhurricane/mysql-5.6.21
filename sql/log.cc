@@ -1977,11 +1977,13 @@ bool MYSQL_QUERY_LOG::write(THD *thd, time_t current_time,
     sprintf(lock_time_buff,  "%.6f", ulonglong2double(lock_utime)/1000000.0);
     sprintf(exec_time_buff, "%.6f", ulonglong2double(exec_utime)/1000000.0);
     if (my_b_printf(&log_file,
-                    "# Query_time: %s  Lock_time: %s Execution_time: %s"
-                    " Rows_sent: %lu  Rows_examined: %lu\n",
-                    query_time_buff, lock_time_buff, exec_time_buff,
+                    "# Query_time: %s  Lock_time: %s"
+                    " Rows_sent: %lu  Rows_examined: %lu"
+                    " Execution_time: %s\n",
+                    query_time_buff, lock_time_buff,
                     (ulong) thd->get_sent_row_count(),
-                    (ulong) thd->get_examined_row_count()) == (uint) -1)
+                    (ulong) thd->get_examined_row_count(),
+                    exec_time_buff) == (uint) -1)
       tmp_errno= errno;
     if (thd->db && strcmp(thd->db, db))
     {						// Database changed
