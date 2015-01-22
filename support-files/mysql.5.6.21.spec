@@ -155,19 +155,19 @@
         %define rhelver %(rpm -qf --qf '%%{version}\\n' /etc/redhat-release | sed -e 's/^\\([0-9]*\\).*/\\1/g')
         %if "%rhelver" == "4"
           %define distro_description      Red Hat Enterprise Linux 4
-          %define distro_releasetag       rhel4
+          %define distro_releasetag       el4
           %define distro_buildreq         gcc-c++ gperf ncurses-devel perl time zlib-devel cmake libaio-devel
           %define distro_requires         chkconfig coreutils grep procps shadow-utils net-tools
         %else
           %if "%rhelver" == "5"
             %define distro_description    Red Hat Enterprise Linux 5
-            %define distro_releasetag     rhel5
+            %define distro_releasetag     el5
             %define distro_buildreq       gcc-c++ gperf ncurses-devel perl time zlib-devel cmake libaio-devel
             %define distro_requires       chkconfig coreutils grep procps shadow-utils net-tools
           %else
             %if "%rhelver" == "6"
               %define distro_description    Red Hat Enterprise Linux 6
-              %define distro_releasetag     rhel6
+              %define distro_releasetag     el6
               %define distro_buildreq       gcc-c++ ncurses-devel perl time zlib-devel cmake libaio-devel
               %define distro_requires       chkconfig coreutils grep procps shadow-utils net-tools
             %else
