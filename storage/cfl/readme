@@ -1,0 +1,12 @@
+cfl，ctrip fast log storage plugin
+
+携程快速日志存储引擎
+
+作者：姜宇祥
+
+文件说明
+readme:项目说明
+CMakeLists.txt:编译文件
+ha_cfl.h:cfl的引擎接口头文件
+ha_cfl.cc:cfl的引擎接口实现文件
+
