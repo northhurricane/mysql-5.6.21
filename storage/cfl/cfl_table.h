@@ -11,7 +11,7 @@ class CflIndex;
 class CflData;
 class CflInsertBuffer;
 
-clase CflTable
+class CflTable
 {
 public :
   static int Create();
@@ -20,7 +20,7 @@ public :
   static int Close();
 
 public :
-  Insert();
+  void Insert();
 
 private :
   CflIndex *index_;
