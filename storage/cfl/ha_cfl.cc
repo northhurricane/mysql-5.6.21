@@ -1000,3 +1000,4 @@ mysql_declare_plugin(cfl)
   0,                                            /* flags */
 }
 mysql_declare_plugin_end;
+
