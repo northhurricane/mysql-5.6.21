@@ -1,6 +1,8 @@
 #ifndef _CFL_TABLE_H_
 #define _CFL_TABLE_H_
 
+#include <my_pthread.h>
+#include "cfl_dt.h"
 /*
 每个CflTable对象对应一个cfl引擎的表，该对象用来组织cfl表的存储
 存储设计概要
@@ -14,19 +16,24 @@ class CflInsertBuffer;
 class CflTable
 {
 public :
-  static int Create();
+  static CflTable* Create();
   static int Destroy();
-  static int Open();
+  static CflTable* Open();
   static int Close();
 
 public :
-  void Insert();
+  void Insert(cfl_dti_t key, void *row, uint16_t row_size);
 
 private :
   CflIndex *index_;
   CflData *data_;
   CflInsertBuffer *insert_buffer_;
 
+  /*插入缓冲区保护，在进行行插入时保护插入缓冲区*/
+  mysql_mutex_t insert_buffer_mutex_;
+
+private :
+  bool PageOverflow(uint16_t row_size);
   CflTable();
   ~CflTable();
 };
