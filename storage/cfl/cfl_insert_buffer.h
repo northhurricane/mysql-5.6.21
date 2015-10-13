@@ -12,7 +12,7 @@
 
 using namespace std;
 
-class CflTable;
+class CflPageFlusher;
 
 /*
   用于在insert buffer中排序
@@ -20,6 +20,8 @@ class CflTable;
 struct cfl_veckey_struct
 {
   cfl_dti_t key;
+  uint16_t row_pos;
+  uint16_t row_size;
 };
 typedef struct cfl_veckey_struct cfl_veckey_t;
 
@@ -45,7 +47,7 @@ public :
       0:刷入磁盘成功
       其他:刷入失败
    */
-  int Flush();
+  int Flush(CflPageFlusher *flusher);
   /*
     获取缓存中row的个数
    */

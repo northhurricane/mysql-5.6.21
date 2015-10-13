@@ -13,6 +13,33 @@ class CflIndex;
 class CflData;
 class CflInsertBuffer;
 
+/*
+  cfl表的存储对象
+*/
+class CflStorage
+{
+public :
+  void WritePage();
+
+private :
+  CflIndex *index_;
+  CflData *data_;
+};
+
+/*
+  已排序的数据写入flusher，并刷入磁盘
+*/
+class CflPageFlusher
+{
+public:
+  void AddRow(void *row, uint16_t row_size);
+  void Flush();
+
+private :
+  void *buffer_;
+  uint32_t buffer_size;
+};
+
 class CflTable
 {
 public :
@@ -25,8 +52,6 @@ public :
   void Insert(cfl_dti_t key, void *row, uint16_t row_size);
 
 private :
-  CflIndex *index_;
-  CflData *data_;
   CflInsertBuffer *insert_buffer_;
 
   /*插入缓冲区保护，在进行行插入时保护插入缓冲区*/

@@ -4,6 +4,7 @@
 #include <my_dbug.h>
 #include "cfl_insert_buffer.h"
 #include "cfl_page.h"
+#include "cfl_table.h"
 
 CflInsertBuffer*
 CflInsertBuffer::Create()
@@ -33,21 +34,34 @@ CflInsertBuffer::Insert(cfl_dti_t key, void *row, uint16_t row_size)
   //定位
   pos = Locate(key);
 
+  cfl_veckey_t veckey;
   //拷贝到指定位置
   memcpy(buffer_ + offset_, row, row_size);
+  veckey.row_pos = offset_;
   offset_ += row_size;
 
   //key加入到vector中
-  cfl_veckey_t veckey;
   veckey.key = key;
   sorted_eles_.insert(sorted_eles_.begin() + pos, veckey);
+
+  veckey.row_size = row_size;
 
   return offset_;
 }
 
 int
-CflInsertBuffer::Flush()
+CflInsertBuffer::Flush(CflPageFlusher *flusher)
 {
+  uint32_t max_row = sorted_eles_.size() - 1;
+
+  for (uint32_t i = 1; i < max_row; i++)
+  {
+    flusher->AddRow(buffer_ + sorted_eles_[i].row_pos
+                    , sorted_eles_[i].row_size);
+  }
+
+  flusher->Flush();
+
   return 0;
 }
 

@@ -2,6 +2,19 @@
 #include "cfl_insert_buffer.h"
 #include "cfl_page.h"
 
+
+///////////////////////
+void
+CflPageFlusher::AddRow(void *row, uint16_t row_size)
+{
+}
+
+void
+CflPageFlusher::Flush()
+{
+}
+
+///////////////////////
 CflTable*
 CflTable::Create()
 {
