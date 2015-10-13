@@ -41,8 +41,11 @@ public :
   uint32_t Insert(cfl_dti_t key, void *row, uint16_t row_size);
   /*
     将buffer中的数据刷入磁盘
+    return :
+      0:刷入磁盘成功
+      其他:刷入失败
    */
-  void FlushBuffer();
+  int Flush();
   /*
     获取缓存中row的个数
    */
@@ -52,7 +55,13 @@ public :
 private :
   //返回插入位置
   uint32_t Locate(cfl_dti_t key);
+  bool Initialize();
+  bool Deinitialize();
+  bool Reset();
 
+  CflInsertBuffer() {}
+  ~CflInsertBuffer() {}
+  
 private :
   //缓冲区，数据将顺序的写入缓冲区
   uint8_t  *buffer_;

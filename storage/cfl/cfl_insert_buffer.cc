@@ -1,16 +1,27 @@
 #include <string.h>
+#include <stdlib.h>
+#include <my_global.h>
+#include <my_dbug.h>
 #include "cfl_insert_buffer.h"
-
+#include "cfl_page.h"
 
 CflInsertBuffer*
 CflInsertBuffer::Create()
 {
-  return NULL;
+  //生成对象
+  CflInsertBuffer *insert_buffer = new CflInsertBuffer();
+
+  //初始化对象，分配相应资源
+  insert_buffer->Initialize();
+
+  return insert_buffer;
 }
 
 void
 CflInsertBuffer::Destroy(CflInsertBuffer *insert_buffer)
 {
+  insert_buffer->Deinitialize();
+  delete insert_buffer;
 }
 
 uint32_t
@@ -32,6 +43,46 @@ CflInsertBuffer::Insert(cfl_dti_t key, void *row, uint16_t row_size)
   sorted_eles_.insert(sorted_eles_.begin() + pos, veckey);
 
   return offset_;
+}
+
+int
+CflInsertBuffer::Flush()
+{
+  return 0;
+}
+
+bool
+CflInsertBuffer::Initialize()
+{
+  offset_ = 0;
+  //buffer_ = NULL;
+  buffer_ = (uint8_t*)malloc(CFL_PAGE_SIZE);
+  if (buffer_ == NULL)
+    goto fail;
+  buffer_size_ = 0;
+
+  return true;
+
+fail :
+  return false;
+}
+
+bool
+CflInsertBuffer::Deinitialize()
+{
+  DBUG_ASSERT(buffer_ != NULL);
+
+  free(buffer_);
+
+  return true;
+}
+
+bool
+CflInsertBuffer::Reset()
+{
+  offset_ = 0;
+
+  return true;
 }
 
 uint32_t
