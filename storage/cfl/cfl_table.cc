@@ -34,6 +34,7 @@ CflTable::Insert(cfl_dti_t key, void *row, uint16_t row_size)
   if (PageOverflow(row_size))
   {
     //将数据刷入磁盘
+    //    insert_buffer_->Flush();
   }
 
   //插入行进入insert buffer
@@ -55,7 +56,7 @@ CflTable::PageOverflow(uint16_t row_size)
   //计算占用的所有空间
   uint32_t total_size = CFL_PAGE_FIX_SPACE_SIZE + total_rows_size + index_size;
 
-  if (total_size <= CFL_PAGE_SIZE)
+  if (total_size > CFL_PAGE_SIZE)
     return true;
   return false;
 }

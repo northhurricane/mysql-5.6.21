@@ -20,12 +20,15 @@ class CflTable;
 struct cfl_veckey_struct
 {
   cfl_dti_t key;
-  void *row;
 };
 typedef struct cfl_veckey_struct cfl_veckey_t;
 
 class CflInsertBuffer
 {
+public :
+  static CflInsertBuffer* Create();
+  static void Destroy(CflInsertBuffer *insert_buffer);
+
 public :
   /*
     parameter:
@@ -47,17 +50,19 @@ public :
   uint32_t GetRowsSize() { return offset_; }
 
 private :
+  //返回插入位置
   uint32_t Locate(cfl_dti_t key);
-  uint32_t AddRow(uint32_t pos, cfl_dti_t key, void *row, uint16_t row_size);
 
 private :
   //缓冲区，数据将顺序的写入缓冲区
-  void *buffer_;
+  uint8_t  *buffer_;
   uint32_t buffer_size_;
   uint32_t offset_; //当前写入位置
 
-  //写入磁盘的最大的key。大于该key值的记录将被无法插入
+  //小于下面key值的记录将被无法插入
+  //最后写入磁盘的最大的key
   cfl_dti_t max_logged_key_;
+
   //当前排序的数据索引
   vector<cfl_veckey_t> sorted_eles_;
 };
