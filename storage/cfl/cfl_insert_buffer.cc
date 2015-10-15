@@ -1,7 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
-#include <my_global.h>
-#include <my_dbug.h>
+#include "cfl.h"
 #include "cfl_insert_buffer.h"
 #include "cfl_page.h"
 #include "cfl_table.h"
@@ -50,17 +49,17 @@ CflInsertBuffer::Insert(cfl_dti_t key, void *row, uint16_t row_size)
 }
 
 int
-CflInsertBuffer::Flush(CflPageFlusher *flusher)
+CflInsertBuffer::Flush(CflPageMaker *maker)
 {
   uint32_t max_row = sorted_eles_.size() - 1;
 
   for (uint32_t i = 1; i < max_row; i++)
   {
-    flusher->AddRow(buffer_ + sorted_eles_[i].row_pos
+    maker->AddRow(buffer_ + sorted_eles_[i].row_pos
                     , sorted_eles_[i].row_size);
   }
 
-  flusher->Flush();
+  maker->Flush(0);
 
   return 0;
 }

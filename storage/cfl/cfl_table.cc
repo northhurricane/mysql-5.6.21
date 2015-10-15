@@ -2,19 +2,6 @@
 #include "cfl_insert_buffer.h"
 #include "cfl_page.h"
 
-
-///////////////////////
-void
-CflPageFlusher::AddRow(void *row, uint16_t row_size)
-{
-}
-
-void
-CflPageFlusher::Flush()
-{
-}
-
-///////////////////////
 CflTable*
 CflTable::Create()
 {
@@ -47,7 +34,7 @@ CflTable::Insert(cfl_dti_t key, void *row, uint16_t row_size)
   if (PageOverflow(row_size))
   {
     //将数据刷入磁盘
-    //    insert_buffer_->Flush();
+    insert_buffer_->Flush(maker_);
   }
 
   //插入行进入insert buffer
@@ -65,7 +52,7 @@ CflTable::PageOverflow(uint16_t row_size)
   uint32_t total_rows_size = row_size + insert_buffer_->GetRowsSize();
   //页面内索引所占空间
   uint32_t index_size = 
-  (insert_buffer_->GetRowsCount() + 1) * CFL_PAGE_INDEX_UNIT_SIZE;
+  (insert_buffer_->GetRowsCount() + 1) * CFL_PAGE_ROW_POS_SIZE;
   //计算占用的所有空间
   uint32_t total_size = CFL_PAGE_FIX_SPACE_SIZE + total_rows_size + index_size;
 

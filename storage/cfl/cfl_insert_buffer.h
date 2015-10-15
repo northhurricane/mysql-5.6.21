@@ -12,7 +12,7 @@
 
 using namespace std;
 
-class CflPageFlusher;
+class CflPageMaker;
 
 /*
   用于在insert buffer中排序
@@ -47,7 +47,7 @@ public :
       0:刷入磁盘成功
       其他:刷入失败
    */
-  int Flush(CflPageFlusher *flusher);
+  int Flush(CflPageMaker *maker);
   /*
     获取缓存中row的个数
    */

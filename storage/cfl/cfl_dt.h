@@ -20,6 +20,8 @@ typedef struct cfl_dt_struct cfl_dt_t;
 
 typedef int64_t cfl_dti_t;
 
+#define CFL_DTI_STORAGE_SIZE (8)
+
 /*
 64位整型时间日期结构
 从高到低

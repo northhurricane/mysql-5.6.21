@@ -36,11 +36,7 @@ CflIndex::Locate(cfl_dti_t key)
     return mid;
   }
 
-  return 0;
+  return low;
 }
 
-cfl_dti_t
-CflIndex::ReadNthIndexNode(uint32_t nth)
-{
-  return 0;
-}
+
