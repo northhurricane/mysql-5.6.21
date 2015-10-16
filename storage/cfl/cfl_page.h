@@ -2,6 +2,7 @@
 #define _CFL_PAGE_H_
 
 #include <stdint.h>
+#include <string.h>
 #include "cfl_endian.h"
 /*
 页存储单元
@@ -77,7 +78,6 @@ cfl_page_nth_row_offset(void *page, uint32_t nth)
 }
 
 class CflStorage;
-
 /*
   已排序的数据写入maker
 */
@@ -85,6 +85,7 @@ class CflPageMaker
 {
 public :
   void AddRow(void *row, uint16_t row_size);
+
   void Flush(CflStorage *storage);
 
 private :

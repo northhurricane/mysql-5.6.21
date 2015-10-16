@@ -34,7 +34,7 @@ CflTable::Insert(cfl_dti_t key, void *row, uint16_t row_size)
   if (PageOverflow(row_size))
   {
     //将数据刷入磁盘
-    insert_buffer_->Flush(maker_);
+    insert_buffer_->Flush(maker_, storage_);
   }
 
   //插入行进入insert buffer

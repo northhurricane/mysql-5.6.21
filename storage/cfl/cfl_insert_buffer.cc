@@ -49,7 +49,7 @@ CflInsertBuffer::Insert(cfl_dti_t key, void *row, uint16_t row_size)
 }
 
 int
-CflInsertBuffer::Flush(CflPageMaker *maker)
+CflInsertBuffer::Flush(CflPageMaker *maker, CflStorage *storage)
 {
   uint32_t max_row = sorted_eles_.size() - 1;
 
@@ -59,7 +59,7 @@ CflInsertBuffer::Flush(CflPageMaker *maker)
                     , sorted_eles_[i].row_size);
   }
 
-  maker->Flush(0);
+  maker->Flush(storage);
 
   return 0;
 }
