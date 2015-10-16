@@ -434,6 +434,7 @@ int ha_cfl::write_row(uchar *buf)
     probably need to do something with 'buf'. We report a success
     here, to pretend that the insert was successful.
   */
+  uint32_t rec_length = table->s->reclength;
   DBUG_RETURN(0);
 }
 
