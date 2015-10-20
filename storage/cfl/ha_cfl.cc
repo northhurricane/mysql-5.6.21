@@ -75,91 +75,8 @@
 #include "ha_cfl.h"
 #include "probes_mysql.h"
 #include "sql_plugin.h"
-
-
-int ha_cfl::encode_quote(uchar *buf)
-{
-  String buffer;
-
-  char attribute_buffer[1024];
-  String attribute(attribute_buffer, sizeof(attribute_buffer),
-                   &my_charset_bin);
-
-  my_bitmap_map *org_bitmap= dbug_tmp_use_all_columns(table, table->read_set);
-  buffer.length(0);
-
-  for (Field **field=table->field ; *field ; field++)
-  {
-    const char *ptr;
-    const char *end_ptr;
-    const bool was_null= (*field)->is_null();
-
-    /*
-      assistance for backwards compatibility in production builds.
-      note: this will not work for ENUM columns.
-    */
-    if (was_null)
-    {
-      (*field)->set_default();
-      (*field)->set_notnull();
-    }
-
-    (*field)->val_str(&attribute,&attribute);
-
-    if (was_null)
-      (*field)->set_null();
-
-    if ((*field)->str_needs_quotes())
-    {
-      ptr= attribute.ptr();
-      end_ptr= attribute.length() + ptr;
-
-      buffer.append('"');
-
-      for (; ptr < end_ptr; ptr++)
-      {
-
-        if (*ptr == '"')
-        {
-          buffer.append('\\');
-          buffer.append('"');
-        }
-        else if (*ptr == '\r')
-        {
-          buffer.append('\\');
-          buffer.append('r');
-        }
-        else if (*ptr == '\\')
-        {
-          buffer.append('\\');
-          buffer.append('\\');
-        }
-        else if (*ptr == '\n')
-        {
-          buffer.append('\\');
-          buffer.append('n');
-        }
-        else
-          buffer.append(*ptr);
-      }
-      buffer.append('"');
-    }
-    else
-    {
-      buffer.append(attribute);
-    }
-
-    buffer.append(',');
-  }
-  // Remove the comma, add a line feed
-  buffer.length(buffer.length() - 1);
-  buffer.append('\n');
-
-  //buffer.replace(buffer.length(), 0, "\n", 1);
-
-  dbug_tmp_restore_column_map(table->read_set, org_bitmap);
-  return (buffer.length());
-}
+#include "cfl.h"
+#include "cfl_table.h"
 
 static handler *cfl_create_handler(handlerton *hton,
                                    TABLE_SHARE *table, 
@@ -434,7 +351,19 @@ int ha_cfl::write_row(uchar *buf)
     probably need to do something with 'buf'. We report a success
     here, to pretend that the insert was successful.
   */
+  //获取记录的长度
   uint32_t rec_length = table->s->reclength;
+  uint8_t cfl_row_buf[65536];
+  uint32_t cfl_row_size = 0;
+  cfl_row_size = cfl_row_from_mysql(table->field, buf
+                                    , cfl_row_buf, sizeof(cfl_row_buf));
+  //将cfl的row写入insert buffer
+  if (cfl_row_size == 0)
+  {
+    DBUG_RETURN(1);
+  }
+  cfl_table_->Insert(0, cfl_row_buf, cfl_row_size);
+
   DBUG_RETURN(0);
 }
 

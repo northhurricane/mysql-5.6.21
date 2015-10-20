@@ -14,5 +14,5 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
 SET(CFL_PLUGIN_DYNAMIC "ha_cfl")
-SET(CFL_SOURCES ha_cfl.cc cfl_buffer.cc cfl_page.cc cfl_table.cc cfl_index.cc cfl_data.cc cfl_insert_buffer.cc)
+SET(CFL_SOURCES ha_cfl.cc cfl_buffer.cc cfl_page.cc cfl_table.cc cfl_index.cc cfl_data.cc cfl_insert_buffer.cc cfl_row.cc)
 MYSQL_ADD_PLUGIN(cfl ${CFL_SOURCES} STORAGE_ENGINE MODULE_ONLY)

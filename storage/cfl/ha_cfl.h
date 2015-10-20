@@ -39,6 +39,8 @@
 #include "handler.h"                     /* handler */
 #include "my_base.h"                     /* ha_rows */
 
+class CflTable;
+
 /** @brief
   Example_share is a class that will be shared among all open handlers.
   This example implements the minimum of what you will probably need.
@@ -261,8 +263,8 @@ public:
   THR_LOCK_DATA **store_lock(THD *thd, THR_LOCK_DATA **to,
                              enum thr_lock_type lock_type);     ///< required
 
-  int encode_quote(uchar *buf);
-  int pack_row(uchar *record);
+private :
+  CflTable *cfl_table_;
 };
 
 
