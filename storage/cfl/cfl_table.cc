@@ -2,6 +2,11 @@
 #include "cfl_insert_buffer.h"
 #include "cfl_page.h"
 
+void
+CflStorage::WritePage(void *page, uint32_t rows_count)
+{
+}
+
 CflTable*
 CflTable::Create()
 {

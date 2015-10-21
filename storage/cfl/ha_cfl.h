@@ -265,6 +265,7 @@ public:
 
 private :
   CflTable *cfl_table_;
+  int encode_quote(uchar *buf);
 };
 
 

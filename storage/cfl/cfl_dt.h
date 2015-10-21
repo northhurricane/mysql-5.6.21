@@ -2,6 +2,7 @@
 #define _CFL_DT_H_
 
 #include <stdint.h>
+#include "cfl_endian.h"
 
 /*
 以公元纪年的日期。秒最高精度
@@ -45,6 +46,17 @@ year|month|day|hour|minute|second|microsecond
 #define SECOND_MASK (0x3F)
 #define MICROSECOND_MASK (0xFFFFF)
 
+inline void
+cfl_dti2s(cfl_dti_t dti, void *target)
+{
+  endian_write_uint64(target, dti);
+}
+
+inline cfl_dti_t
+cfl_s2dti(void *source)
+{
+  return endian_read_uint64(source);
+}
 
 inline cfl_dti_t cfl_t2i(const cfl_dt_t *v)
 {

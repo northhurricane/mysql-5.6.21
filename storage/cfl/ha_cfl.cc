@@ -345,6 +345,7 @@ int ha_cfl::close(void)
 int ha_cfl::write_row(uchar *buf)
 {
   DBUG_ENTER("ha_cfl::write_row");
+
   /*
     Example of a successful write_row. We don't store the data
     anywhere; they are thrown away. A real implementation will
@@ -355,8 +356,10 @@ int ha_cfl::write_row(uchar *buf)
   uint32_t rec_length = table->s->reclength;
   uint8_t cfl_row_buf[65536];
   uint32_t cfl_row_size = 0;
+  my_bitmap_map *org_bitmap= dbug_tmp_use_all_columns(table, table->read_set);
   cfl_row_size = cfl_row_from_mysql(table->field, buf
                                     , cfl_row_buf, sizeof(cfl_row_buf));
+  dbug_tmp_restore_column_map(table->read_set, org_bitmap);
   //将cfl的row写入insert buffer
   if (cfl_row_size == 0)
   {
