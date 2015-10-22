@@ -33,7 +33,7 @@ class CflTable
 {
 public :
   static CflTable* Create();
-  static int Destroy();
+  static int Destroy(CflTable *table);
   static CflTable* Open();
   static int Close();
 
@@ -41,6 +41,9 @@ public :
   void Insert(cfl_dti_t key, void *row, uint16_t row_size);
 
 private :
+  int Initialize();
+  int Deinitialize();
+
   CflInsertBuffer *insert_buffer_;
   CflPageMaker *maker_;
   CflStorage *storage_;

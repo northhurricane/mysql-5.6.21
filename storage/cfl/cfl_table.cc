@@ -10,12 +10,23 @@ CflStorage::WritePage(void *page, uint32_t rows_count)
 CflTable*
 CflTable::Create()
 {
-  return 0;
+  CflTable *table = new CflTable();
+  int r = table->Initialize();
+  if (r < 0)
+  {
+    return NULL;
+  }
+
+  return table;
 }
 
 int
-CflTable::Destroy()
+CflTable::Destroy(CflTable *table)
 {
+  DBUG_ASSERT(table != NULL);
+
+  delete table;
+
   return 0;
 }
 
@@ -65,3 +76,17 @@ CflTable::PageOverflow(uint16_t row_size)
     return true;
   return false;
 }
+
+int
+CflTable::Initialize()
+{
+  mysql_mutex_init(NULL, &insert_buffer_mutex_, MY_MUTEX_INIT_FAST);
+  return 0;
+}
+
+int
+CflTable::Deinitialize()
+{
+  mysql_mutex_destroy(&insert_buffer_mutex_);
+}
+

@@ -77,6 +77,7 @@
 #include "sql_plugin.h"
 #include "cfl.h"
 #include "cfl_table.h"
+#include "cfl_row.h"
 
 static handler *cfl_create_handler(handlerton *hton,
                                    TABLE_SHARE *table, 
@@ -356,16 +357,18 @@ int ha_cfl::write_row(uchar *buf)
   uint32_t rec_length = table->s->reclength;
   uint8_t cfl_row_buf[65536];
   uint32_t cfl_row_size = 0;
+  cfl_dti_t key_dti = 0;
   my_bitmap_map *org_bitmap= dbug_tmp_use_all_columns(table, table->read_set);
   cfl_row_size = cfl_row_from_mysql(table->field, buf
-                                    , cfl_row_buf, sizeof(cfl_row_buf));
+                                    , cfl_row_buf, sizeof(cfl_row_buf)
+                                    , &key_dti);
   dbug_tmp_restore_column_map(table->read_set, org_bitmap);
   //将cfl的row写入insert buffer
   if (cfl_row_size == 0)
   {
     DBUG_RETURN(1);
   }
-  cfl_table_->Insert(0, cfl_row_buf, cfl_row_size);
+  cfl_table_->Insert(key_dti, cfl_row_buf, cfl_row_size);
 
   DBUG_RETURN(0);
 }
