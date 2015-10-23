@@ -33,17 +33,18 @@ CflInsertBuffer::Insert(cfl_dti_t key, void *row, uint16_t row_size)
   //定位
   pos = Locate(key);
 
-  cfl_veckey_t veckey;
   //拷贝到指定位置
   memcpy(buffer_ + offset_, row, row_size);
-  veckey.row_pos = offset_;
-  offset_ += row_size;
 
   //key加入到vector中
+  cfl_veckey_t veckey;
+  veckey.row_pos = offset_;
   veckey.key = key;
+  veckey.row_size = row_size;
+
   sorted_eles_.insert(sorted_eles_.begin() + pos, veckey);
 
-  veckey.row_size = row_size;
+  offset_ += row_size;
 
   return offset_;
 }
@@ -99,7 +100,7 @@ CflInsertBuffer::Locate(cfl_dti_t key)
   uint32_t high, mid, low;
   high = sorted_eles_.size() - 1;
   low = 0;
-  mid = (low + high) / 2 + 1;
+  mid = (low + high) / 2;
   bool found = false;
   cfl_veckey_t mid_ele;
 
@@ -116,9 +117,10 @@ CflInsertBuffer::Locate(cfl_dti_t key)
     }
     else
     {
+      found = true;
       break;
     }
-    mid = (low + high) / 2 + 1;
+    mid = (low + high) / 2;
   }
 
   if (found)
