@@ -848,7 +848,9 @@ THR_LOCK_DATA **ha_cfl::store_lock(THD *thd,
 int ha_cfl::delete_table(const char *name)
 {
   DBUG_ENTER("ha_cfl::delete_table");
-  /* This is not implemented but we want someone to be able that it works. */
+
+  CflTable::DestroyStorage(name);
+
   DBUG_RETURN(0);
 }
 

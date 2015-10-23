@@ -1,6 +1,18 @@
 #include "cfl_index.h"
 
 int
+cfl_index_file_name(char *buffer, uint32_t buffer_size, const char *name)
+{
+  char *index_file_name = (char*)buffer;
+
+  strcpy(index_file_name, name);
+  strcat(index_file_name, CFL_INDEX_FILE_SUFFIX);
+
+  return 0;
+}
+
+
+int
 CflIndex::CreateIndexStorage(const char *name)
 {
   char index_file_name[256];
@@ -16,6 +28,15 @@ CflIndex::CreateIndexStorage(const char *name)
   }
 
   fclose(f);
+  return 0;
+}
+
+int
+CflIndex::DestroyIndexStorage(const char *name)
+{
+  char index_file_name[256];
+  cfl_index_file_name(index_file_name, sizeof(index_file_name), name);
+  int r = remove(index_file_name);
   return 0;
 }
 

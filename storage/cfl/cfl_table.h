@@ -23,6 +23,8 @@ class CflStorage
 {
 public :
   static int CreateStorage(const char *name);
+  static int DestroyStorage(const char *name);
+
   void WritePage(void *page, uint32_t rows_count);
 
 private :
@@ -34,6 +36,8 @@ class CflTable
 {
 public :
   static int CreateStorage(const char *name);
+  static int DestroyStorage(const char *name);
+
   static CflTable* Create();
   static int Destroy(CflTable *table);
   static CflTable* Open();

@@ -13,11 +13,13 @@ class CflData
 {
 public :
   static int CreateDataStorage(const char *name);
+  static int DestroyDataStorage(const char *name);
+
   void WritePage(uint32_t page_no, void *page, uint32_t page_size);
 
 private :
   //文件
-  FILE *index_;
+  FILE *data_;
 };
 
 #endif //_CFL_DATA_H_

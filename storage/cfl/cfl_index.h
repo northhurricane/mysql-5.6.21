@@ -31,6 +31,7 @@ class CflIndex
 {
 public :
   static int CreateIndexStorage(const char *name);
+  static int DestroyIndexStorage(const char *name);
 
   /*定位key所在的页，可能存在多个页面的key相同，定位的是第一个*/
   uint32_t Locate(cfl_dti_t key);

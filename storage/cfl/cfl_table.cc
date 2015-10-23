@@ -19,11 +19,26 @@ CflStorage::CreateStorage(const char *name)
   return 0;
 }
 
+int
+CflStorage::DestroyStorage(const char *name)
+{
+  CflIndex::DestroyIndexStorage(name);
+  CflData::DestroyDataStorage(name);
+
+  return 0;
+}
+
 /*CflTable*/
 int
 CflTable::CreateStorage(const char *name)
 {
   return CflStorage::CreateStorage(name);
+}
+
+int
+CflTable::DestroyStorage(const char *name)
+{
+  return CflStorage::DestroyStorage(name);
 }
 
 CflTable*
