@@ -918,10 +918,12 @@ int ha_cfl::create(const char *name, TABLE *table_arg,
                        HA_CREATE_INFO *create_info)
 {
   DBUG_ENTER("ha_cfl::create");
-  /*
-    This is not implemented but we want someone to be able to see that it
-    works.
-  */
+
+  int r = CflTable::CreateStorage(name);
+  if (r < 0)
+  {
+  }
+
   DBUG_RETURN(0);
 }
 

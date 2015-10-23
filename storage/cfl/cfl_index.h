@@ -25,10 +25,13 @@ index node:64bit，对应的数据页的最小时间节点
 #define CFL_INDEX_HEAD_FIX_SIZE (512)
 #define CFL_INDEX_HEAD_TAIL (CFL_INDEX_HEAD_FIX_SIZE)
 
+#define CFL_INDEX_FILE_SUFFIX ".cfli" 
 
 class CflIndex
 {
 public :
+  static int CreateIndexStorage(const char *name);
+
   /*定位key所在的页，可能存在多个页面的key相同，定位的是第一个*/
   uint32_t Locate(cfl_dti_t key);
   uint32_t ReadNodeCount()

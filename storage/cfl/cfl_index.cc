@@ -1,5 +1,24 @@
 #include "cfl_index.h"
 
+int
+CflIndex::CreateIndexStorage(const char *name)
+{
+  char index_file_name[256];
+
+  strcpy(index_file_name, name);
+  strcat(index_file_name, CFL_INDEX_FILE_SUFFIX);
+  
+  FILE *f = fopen(index_file_name, "w+");
+
+  if (f == NULL)
+  {
+    return -1;
+  }
+
+  fclose(f);
+  return 0;
+}
+
 uint32_t
 CflIndex::Locate(cfl_dti_t key)
 {

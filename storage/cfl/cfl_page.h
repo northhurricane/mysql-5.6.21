@@ -8,6 +8,14 @@
 页存储单元
 每页设计为1M大小
 */
+/*
+页面格式
+page magic head
+page header
+rows data
+rows index
+page magic tail
+*/
 
 #define CFL_PAGE_SIZE (1024 * 1024)
 

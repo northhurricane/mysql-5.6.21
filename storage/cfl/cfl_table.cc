@@ -1,10 +1,29 @@
 #include "cfl_table.h"
+#include "cfl_index.h"
+#include "cfl_data.h"
 #include "cfl_insert_buffer.h"
 #include "cfl_page.h"
 
+/*CflStorage*/
 void
 CflStorage::WritePage(void *page, uint32_t rows_count)
 {
+}
+
+int
+CflStorage::CreateStorage(const char *name)
+{
+  CflIndex::CreateIndexStorage(name);
+  CflData::CreateDataStorage(name);
+
+  return 0;
+}
+
+/*CflTable*/
+int
+CflTable::CreateStorage(const char *name)
+{
+  return CflStorage::CreateStorage(name);
 }
 
 CflTable*
