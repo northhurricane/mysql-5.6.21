@@ -53,8 +53,8 @@ private :
 
 private :
   bool PageOverflow(uint16_t row_size);
-  CflTable();
-  ~CflTable();
+  CflTable() {}
+  ~CflTable() {}
 };
 
 

@@ -68,9 +68,7 @@ class ha_cfl: public handler
 
 public:
   ha_cfl(handlerton *hton, TABLE_SHARE *table_arg);
-  ~ha_cfl()
-  {
-  }
+  ~ha_cfl();
 
   /** @brief
     The name that will be used for display purposes.

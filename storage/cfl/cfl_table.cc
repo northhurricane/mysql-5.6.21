@@ -25,6 +25,7 @@ CflTable::Destroy(CflTable *table)
 {
   DBUG_ASSERT(table != NULL);
 
+  table->Deinitialize();
   delete table;
 
   return 0;
@@ -81,12 +82,20 @@ int
 CflTable::Initialize()
 {
   mysql_mutex_init(NULL, &insert_buffer_mutex_, MY_MUTEX_INIT_FAST);
+  insert_buffer_ = CflInsertBuffer::Create();
+  if (insert_buffer_ == NULL)
+  {
+  }
+
   return 0;
+FAIL:
+  return -1;
 }
 
 int
 CflTable::Deinitialize()
 {
   mysql_mutex_destroy(&insert_buffer_mutex_);
+  return 0;
 }
 

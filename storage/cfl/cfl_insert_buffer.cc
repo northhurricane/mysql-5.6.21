@@ -64,7 +64,7 @@ CflInsertBuffer::Flush(CflPageMaker *maker, CflStorage *storage)
   return 0;
 }
 
-bool
+int
 CflInsertBuffer::Initialize()
 {
   offset_ = 0;
@@ -72,12 +72,14 @@ CflInsertBuffer::Initialize()
   buffer_ = (uint8_t*)malloc(CFL_PAGE_SIZE);
   if (buffer_ == NULL)
     goto fail;
-  buffer_size_ = 0;
+  buffer_size_ = CFL_PAGE_SIZE;
 
-  return true;
+  InitFakeRecord();
+
+  return 0;
 
 fail :
-  return false;
+  return -1;
 }
 
 bool
@@ -86,14 +88,6 @@ CflInsertBuffer::Deinitialize()
   DBUG_ASSERT(buffer_ != NULL);
 
   free(buffer_);
-
-  return true;
-}
-
-bool
-CflInsertBuffer::Reset()
-{
-  offset_ = 0;
 
   return true;
 }

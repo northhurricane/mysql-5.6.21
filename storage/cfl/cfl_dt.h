@@ -23,6 +23,9 @@ typedef int64_t cfl_dti_t;
 
 #define CFL_DTI_STORAGE_SIZE (8)
 
+#define CFL_DTI_MIN (-1)
+#define CFL_DTI_MAX (0x7FFFFFFFFFFFFFFF)
+
 /*
 64位整型时间日期结构
 从高到低

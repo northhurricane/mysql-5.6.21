@@ -24,7 +24,7 @@
 #define CFL_PAGE_MAGIC_TAIL_SIZE (8)
 
 #define CFL_PAGE_FIX_SPACE_SIZE (CFL_PAGE_MAGIC_HEAD_SIZE + \
-                                 CFL_PAGE_MAGIC_TAIL + CFL_PAGE_HEAD_SIZE)
+                                 CFL_PAGE_MAGIC_TAIL_SIZE + CFL_PAGE_HEAD_SIZE)
 
 inline void
 cfl_page_write_row_count(void *page, uint32_t row_count)

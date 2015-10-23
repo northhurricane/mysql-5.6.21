@@ -173,7 +173,16 @@ static handler* cfl_create_handler(handlerton *hton,
 
 ha_cfl::ha_cfl(handlerton *hton, TABLE_SHARE *table_arg)
   :handler(hton, table_arg)
-{}
+{
+  cfl_table_ = CflTable::Create();
+  DBUG_ASSERT(1);
+}
+
+ha_cfl::~ha_cfl()
+{
+  if (cfl_table_ != NULL)
+    CflTable::Destroy(cfl_table_);
+}
 
 
 /**

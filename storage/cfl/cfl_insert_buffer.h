@@ -8,6 +8,7 @@
 
 #include <stdint.h>
 #include <vector>
+#include "cfl.h"
 #include "cfl_dt.h"
 
 using namespace std;
@@ -21,7 +22,7 @@ class CflStorage;
 struct cfl_veckey_struct
 {
   cfl_dti_t key;
-  uint16_t row_pos;
+  uint32_t row_pos;
   uint16_t row_size;
 };
 typedef struct cfl_veckey_struct cfl_veckey_t;
@@ -58,12 +59,30 @@ public :
 private :
   //返回插入位置
   uint32_t Locate(cfl_dti_t key);
-  bool Initialize();
+  int Initialize();
   bool Deinitialize();
-  bool Reset();
 
   CflInsertBuffer() {}
   ~CflInsertBuffer() {}
+
+  //初始化
+  inline void InitFakeRecord()
+  {
+    DBUG_ASSERT(sorted_eles_.size() == 0);
+    cfl_veckey_t min = {CFL_DTI_MIN, 0, 0};
+    cfl_veckey_t max = {CFL_DTI_MAX, 0, 0};
+
+    sorted_eles_.push_back(min);
+    sorted_eles_.push_back(max);
+  }
+
+  //重置insert buffer的内部数据，处于插入的初始状态
+  inline void Reset()
+  {
+    offset_ = 0;
+    sorted_eles_.clear();
+    InitFakeRecord();
+  }
   
 private :
   //缓冲区，数据将顺序的写入缓冲区
@@ -72,7 +91,6 @@ private :
   uint32_t offset_; //当前写入位置
 
   //小于下面key值的记录将被无法插入
-  //最后写入磁盘的最大的key
   cfl_dti_t max_logged_key_;
 
   //当前排序的数据索引
