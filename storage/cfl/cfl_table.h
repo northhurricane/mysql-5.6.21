@@ -22,14 +22,27 @@ class CflInsertBuffer;
 class CflStorage
 {
 public :
+  /*创建进行存储的文件*/
   static int CreateStorage(const char *name);
+  /*销毁进行存储的文件*/
   static int DestroyStorage(const char *name);
+  /*创建对象，打开进行存储的文件与之关联*/
+  static CflStorage *Open(const char *name);
+  static int Close(CflStorage *storage);
 
   void WritePage(void *page, uint32_t rows_count);
 
 private :
   CflIndex *index_;
   CflData *data_;
+
+  CflStorage()
+  {
+    index_ = NULL; data_ = NULL;
+  }
+  ~CflStorage();
+  int Initialize(const char *name);
+  int Deinitialize();
 };
 
 class CflTable
@@ -38,7 +51,7 @@ public :
   static int CreateStorage(const char *name);
   static int DestroyStorage(const char *name);
 
-  static CflTable* Create();
+  static CflTable* Create(const char *name);
   static int Destroy(CflTable *table);
   static CflTable* Open();
   static int Close();
@@ -47,7 +60,7 @@ public :
   void Insert(cfl_dti_t key, void *row, uint16_t row_size);
 
 private :
-  int Initialize();
+  int Initialize(const char *name);
   int Deinitialize();
 
   CflInsertBuffer *insert_buffer_;

@@ -42,3 +42,32 @@ CflData::DestroyDataStorage(const char *name)
   return 0;
 }
 
+CflData*
+CflData::Create(const char *name)
+{
+  char data_file_name[256];
+
+  cfl_data_file_name(data_file_name, sizeof(data_file_name), name);
+
+  FILE *f = fopen(data_file_name, "w+");
+
+  if (f == NULL)
+  {
+    return NULL;
+  }
+
+  CflData *data = new CflData();
+  data->data_file_ = f;
+
+  return data;
+}
+
+int
+CflData::Destroy(CflData *data)
+{
+  DBUG_ASSERT(data != NULL);
+
+  fclose(data->data_file_);
+  delete data;
+}
+

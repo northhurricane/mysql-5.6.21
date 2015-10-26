@@ -40,6 +40,28 @@ CflIndex::DestroyIndexStorage(const char *name)
   return 0;
 }
 
+CflIndex*
+CflIndex::Create(const char *name)
+{
+  CflIndex * index = new CflIndex();
+  char index_file_name[256];
+
+  cfl_index_file_name(index_file_name, sizeof(index_file_name), name);
+  FILE *f ;
+  f =  fopen(index_file_name, "w+");
+  index->index_file_ = f;
+
+  return index;
+}
+
+int
+CflIndex::Destroy(CflIndex *index)
+{
+  fclose(index->index_file_);
+  delete index;
+  return 0;
+}
+
 uint32_t
 CflIndex::Locate(cfl_dti_t key)
 {

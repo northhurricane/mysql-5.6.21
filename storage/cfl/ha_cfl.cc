@@ -174,7 +174,7 @@ static handler* cfl_create_handler(handlerton *hton,
 ha_cfl::ha_cfl(handlerton *hton, TABLE_SHARE *table_arg)
   :handler(hton, table_arg)
 {
-  cfl_table_ = CflTable::Create();
+  cfl_table_ = NULL;
   DBUG_ASSERT(1);
 }
 
@@ -295,6 +295,8 @@ int ha_cfl::open(const char *name, int mode, uint test_if_locked)
   if (!(share = get_share()))
     DBUG_RETURN(1);
   thr_lock_data_init(&share->lock,&lock,NULL);
+
+  cfl_table_ = CflTable::Create(name);
 
   DBUG_RETURN(0);
 }

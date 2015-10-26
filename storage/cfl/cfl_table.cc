@@ -28,6 +28,43 @@ CflStorage::DestroyStorage(const char *name)
   return 0;
 }
 
+CflStorage*
+CflStorage::Open(const char *name)
+{
+  CflStorage *storage;
+
+  storage = new CflStorage();
+
+  storage->Initialize(name);
+
+  return storage;
+}
+
+int
+CflStorage::Close(CflStorage *storage)
+{
+  storage->Deinitialize();
+
+  delete storage;
+}
+
+int
+CflStorage::Initialize(const char *name)
+{
+  index_ = CflIndex::Create(name);
+  data_ = CflData::Create(name);
+
+  return 0;
+
+  //to do : fail process
+}
+
+int
+CflStorage::Deinitialize()
+{
+  return 0;
+}
+
 /*CflTable*/
 int
 CflTable::CreateStorage(const char *name)
@@ -42,10 +79,10 @@ CflTable::DestroyStorage(const char *name)
 }
 
 CflTable*
-CflTable::Create()
+CflTable::Create(const char *name)
 {
   CflTable *table = new CflTable();
-  int r = table->Initialize();
+  int r = table->Initialize(name);
   if (r < 0)
   {
     return NULL;
@@ -113,7 +150,7 @@ CflTable::PageOverflow(uint16_t row_size)
 }
 
 int
-CflTable::Initialize()
+CflTable::Initialize(const char *name)
 {
   mysql_mutex_init(NULL, &insert_buffer_mutex_, MY_MUTEX_INIT_FAST);
   insert_buffer_ = CflInsertBuffer::Create();
