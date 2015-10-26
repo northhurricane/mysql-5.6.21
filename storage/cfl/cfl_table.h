@@ -40,7 +40,9 @@ private :
   {
     index_ = NULL; data_ = NULL;
   }
-  ~CflStorage();
+  ~CflStorage()
+  {
+  }
   int Initialize(const char *name);
   int Deinitialize();
 };
