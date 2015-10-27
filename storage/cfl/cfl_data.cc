@@ -71,3 +71,9 @@ CflData::Destroy(CflData *data)
   delete data;
 }
 
+int
+CflData::WritePage(void *page, uint32_t page_size)
+{
+  return 0;
+}
+

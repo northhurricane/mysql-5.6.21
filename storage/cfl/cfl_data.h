@@ -18,7 +18,7 @@ public :
   static CflData *Create(const char *name);
   static int Destroy(CflData *data);
 
-  void WritePage(uint32_t page_no, void *page, uint32_t page_size);
+  int WritePage(void *page, uint32_t page_size);
 
 private :
   //文件

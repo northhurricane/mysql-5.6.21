@@ -8,6 +8,8 @@
 void
 CflStorage::WritePage(void *page, uint32_t rows_count)
 {
+  data_->WritePage(page, CFL_PAGE_SIZE);
+  //  index_->
 }
 
 int
@@ -144,6 +146,10 @@ CflTable::PageOverflow(uint16_t row_size)
   //计算占用的所有空间
   uint32_t total_size = CFL_PAGE_FIX_SPACE_SIZE + total_rows_size + index_size;
 
+  //测试用
+  if (total_size > 64)
+    return true;
+
   if (total_size > CFL_PAGE_SIZE)
     return true;
   return false;
@@ -157,6 +163,8 @@ CflTable::Initialize(const char *name)
   if (insert_buffer_ == NULL)
   {
   }
+  maker_ = CflPageMaker::Create();
+  storage_ = CflStorage::Open(name);
 
   return 0;
 FAIL:
@@ -167,6 +175,10 @@ int
 CflTable::Deinitialize()
 {
   mysql_mutex_destroy(&insert_buffer_mutex_);
+  CflPageMaker::Destroy(maker_);
+  CflInsertBuffer::Destroy(insert_buffer_);
+  CflStorage::Close(storage_);
+
   return 0;
 }
 

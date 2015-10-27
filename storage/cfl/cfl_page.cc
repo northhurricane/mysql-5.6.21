@@ -8,12 +8,35 @@
 #include "cfl_page.h"
 #include "cfl_table.h"
 
+CflPageMaker*
+CflPageMaker::Create()
+{
+  CflPageMaker *maker = new CflPageMaker();
+  maker->buffer_ = (uint8_t*)malloc(CFL_PAGE_SIZE);
+  if (maker->buffer_ == NULL)
+  {
+    delete maker;
+    return NULL;
+  }
+  maker->Reset();
+
+  return maker;
+}
+
+int
+CflPageMaker::Destroy(CflPageMaker *maker)
+{
+  DBUG_ASSERT(maker != NULL);
+  delete maker;
+  return 0;
+}
 
 void
 CflPageMaker::AddRow(void *row, uint16_t row_size)
 {
-  //将row写入缓冲区
+  //将row写入缓冲区。拷贝行数据，写入行的偏移
   memcpy(row_offset_, row, row_size);
+  cfl_page_write_row_offset(pos_offset_, row_pos_);
 
   rows_counter_++;
   row_offset_ += row_size;

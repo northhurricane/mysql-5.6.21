@@ -92,6 +92,9 @@ class CflStorage;
 class CflPageMaker
 {
 public :
+  static CflPageMaker *Create();
+  static int Destroy(CflPageMaker *maker);
+
   void AddRow(void *row, uint16_t row_size);
 
   void Flush(CflStorage *storage);
@@ -99,16 +102,29 @@ public :
 private :
   uint32_t rows_counter_;
   uint8_t *buffer_;
+  uint32_t row_pos_; //行在页面内的偏移
   uint8_t *row_offset_; //写入行偏移
   uint8_t *pos_offset_; //位置偏移
 
   void Reset()
   {
     rows_counter_ = 0;
-    row_offset_ += CFL_PAGE_MAGIC_HEAD_SIZE + CFL_PAGE_HEAD_SIZE;
+    row_pos_ = CFL_PAGE_MAGIC_HEAD_SIZE + CFL_PAGE_HEAD_SIZE;
+    row_offset_ = buffer_ + CFL_PAGE_MAGIC_HEAD_SIZE + CFL_PAGE_HEAD_SIZE;
     pos_offset_ = (buffer_ + CFL_PAGE_SIZE) - CFL_PAGE_MAGIC_TAIL_SIZE
                                             - CFL_PAGE_ROW_POS_SIZE;
   }
+
+  CflPageMaker() {
+    buffer_ = NULL;
+    Reset();
+  }
+
+  ~CflPageMaker() {
+    if (buffer_ != NULL)
+      free(buffer_);
+  }
+
 };
 
 #endif //_CFL_PAGE_H_
