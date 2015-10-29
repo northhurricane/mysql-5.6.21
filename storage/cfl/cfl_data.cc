@@ -20,7 +20,7 @@ CflData::CreateDataStorage(const char *name)
   strcpy(data_file_name, name);
   strcat(data_file_name, CFL_DATA_FILE_SUFFIX);
   
-  FILE *f = fopen(data_file_name, "w+");
+  FILE *f = fopen(data_file_name, "wb+");
 
   if (f == NULL)
   {
@@ -49,7 +49,7 @@ CflData::Create(const char *name)
 
   cfl_data_file_name(data_file_name, sizeof(data_file_name), name);
 
-  FILE *f = fopen(data_file_name, "w+");
+  FILE *f = fopen(data_file_name, "wb+");
 
   if (f == NULL)
   {
@@ -74,6 +74,7 @@ CflData::Destroy(CflData *data)
 int
 CflData::WritePage(void *page, uint32_t page_size)
 {
+  
   return 0;
 }
 
