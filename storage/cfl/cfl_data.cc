@@ -17,17 +17,14 @@ CflData::CreateDataStorage(const char *name)
 {
   char data_file_name[256];
 
-  strcpy(data_file_name, name);
-  strcat(data_file_name, CFL_DATA_FILE_SUFFIX);
-  
-  FILE *f = fopen(data_file_name, "wb+");
+  cfl_data_file_name(data_file_name, sizeof(data_file_name), name);
 
-  if (f == NULL)
+  int r = cf_create(data_file_name);
+  if (r < 0)
   {
     return -1;
   }
 
-  fclose(f);
   return 0;
 }
 
@@ -38,6 +35,8 @@ CflData::DestroyDataStorage(const char *name)
 
   cfl_data_file_name(data_file_name, sizeof(data_file_name), name);
   int r = remove(data_file_name);
+  if (r < 0)
+    return -1;
 
   return 0;
 }
@@ -49,15 +48,13 @@ CflData::Create(const char *name)
 
   cfl_data_file_name(data_file_name, sizeof(data_file_name), name);
 
-  FILE *f = fopen(data_file_name, "wb+");
-
-  if (f == NULL)
-  {
+  cf_t cf_file;
+  int r = cf_open(data_file_name, &cf_file);
+  if (r < 0)
     return NULL;
-  }
 
   CflData *data = new CflData();
-  data->data_file_ = f;
+  data->cf_file_ = cf_file;
 
   return data;
 }
@@ -67,14 +64,21 @@ CflData::Destroy(CflData *data)
 {
   DBUG_ASSERT(data != NULL);
 
-  fclose(data->data_file_);
+  cf_close(&data->cf_file_);
   delete data;
+
+  return 0;
 }
 
 int
 CflData::WritePage(void *page, uint32_t page_size)
 {
-  
+  uint64_t offset = 0;
+
+  int r = cf_write(&cf_file_, offset, page, page_size);
+  if (r < 0)
+    return -1;
+
   return 0;
 }
 

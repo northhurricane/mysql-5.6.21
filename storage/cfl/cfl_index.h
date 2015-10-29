@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include "cfl_dt.h"
 #include "cfl_endian.h"
+#include "cfl_file.h"
 
 /*
 索引的存储对象
@@ -59,7 +60,7 @@ private :
     return endian_read_uint64(nth_node);
   }
   //操作的文件
-  FILE *index_file_;
+  cf_t cf_file_;
 
   //缓冲区，作为index文件的镜像，便于快速读取
   uint8_t *buffer_;

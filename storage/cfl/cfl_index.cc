@@ -16,18 +16,14 @@ int
 CflIndex::CreateIndexStorage(const char *name)
 {
   char index_file_name[256];
+  cfl_index_file_name(index_file_name, sizeof(index_file_name), name);
 
-  strcpy(index_file_name, name);
-  strcat(index_file_name, CFL_INDEX_FILE_SUFFIX);
-  
-  FILE *f = fopen(index_file_name, "w+");
-
-  if (f == NULL)
+  int r = cf_create(index_file_name);
+  if (r < 0)
   {
     return -1;
   }
 
-  fclose(f);
   return 0;
 }
 
@@ -37,6 +33,8 @@ CflIndex::DestroyIndexStorage(const char *name)
   char index_file_name[256];
   cfl_index_file_name(index_file_name, sizeof(index_file_name), name);
   int r = remove(index_file_name);
+  if (r < 0)
+    return -1;
   return 0;
 }
 
@@ -47,9 +45,12 @@ CflIndex::Create(const char *name)
   char index_file_name[256];
 
   cfl_index_file_name(index_file_name, sizeof(index_file_name), name);
-  FILE *f ;
-  f =  fopen(index_file_name, "w+");
-  index->index_file_ = f;
+  int r = cf_open(index_file_name, &index->cf_file_);
+  if (r < 0)
+  {
+    delete index;
+    return NULL;
+  }
 
   return index;
 }
@@ -57,8 +58,11 @@ CflIndex::Create(const char *name)
 int
 CflIndex::Destroy(CflIndex *index)
 {
-  fclose(index->index_file_);
+  int r = cf_close(&index->cf_file_);
+
   delete index;
+  if (r < 0)
+    return -1;
   return 0;
 }
 

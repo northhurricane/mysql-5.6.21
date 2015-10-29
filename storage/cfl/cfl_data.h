@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "cfl.h"
+#include "cfl_file.h"
 
 #define CFL_DATA_FILE_SUFFIX ".cfld"
 /*
@@ -21,8 +22,7 @@ public :
   int WritePage(void *page, uint32_t page_size);
 
 private :
-  //文件
-  FILE *data_file_;
+  cf_t cf_file_;
 };
 
 #endif //_CFL_DATA_H_

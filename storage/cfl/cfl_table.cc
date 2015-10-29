@@ -48,6 +48,8 @@ CflStorage::Close(CflStorage *storage)
   storage->Deinitialize();
 
   delete storage;
+
+  return 0;
 }
 
 int
@@ -162,12 +164,27 @@ CflTable::Initialize(const char *name)
   insert_buffer_ = CflInsertBuffer::Create();
   if (insert_buffer_ == NULL)
   {
+    goto FAIL;
   }
   maker_ = CflPageMaker::Create();
+  if (maker_ == NULL)
+  {
+    goto FAIL;
+  }
   storage_ = CflStorage::Open(name);
+  if (storage_ == NULL)
+  {
+    goto FAIL;
+  }
 
   return 0;
 FAIL:
+  if (insert_buffer_ != NULL)
+    CflInsertBuffer::Destroy(insert_buffer_);
+  if (maker_ != NULL)
+    CflPageMaker::Destroy(maker_);
+  if (storage_ != NULL)
+    CflStorage::Close(storage_);
   return -1;
 }
 

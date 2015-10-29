@@ -74,7 +74,11 @@ private :
 
 private :
   bool PageOverflow(uint16_t row_size);
-  CflTable() {}
+  CflTable() {
+    insert_buffer_ = NULL;
+    maker_ = NULL;
+    storage_ = NULL;
+  }
   ~CflTable() {}
 };
 
