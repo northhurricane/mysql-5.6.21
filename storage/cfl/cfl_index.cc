@@ -11,6 +11,13 @@ cfl_index_file_name(char *buffer, uint32_t buffer_size, const char *name)
   return 0;
 }
 
+int
+CflIndex::AddPage(cfl_dti_t dti)
+{
+  //写入index node
+  //写入头数据
+  return 0;
+}
 
 int
 CflIndex::CreateIndexStorage(const char *name)

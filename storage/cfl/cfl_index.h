@@ -48,6 +48,7 @@ public :
     uint8_t *node_count_pos = buffer_ + CFL_INDEX_NODE_COUNT;
     endian_write_uint32(node_count_pos, node_count);
   }
+  int AddPage(cfl_dti_t dti);
 
 private :
   /*

@@ -48,7 +48,7 @@ void
 CflPageMaker::Flush(CflStorage *storage)
 {
   //写入存储对象
-  storage->WritePage(buffer_, rows_counter_);
+  storage->WritePage(buffer_, rows_counter_, page_index_);
 
   Reset();
 }

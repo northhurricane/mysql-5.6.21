@@ -6,10 +6,10 @@
 
 /*CflStorage*/
 void
-CflStorage::WritePage(void *page, uint32_t rows_count)
+CflStorage::WritePage(void *page, uint32_t rows_count, cfl_dti_t dti)
 {
   data_->WritePage(page, CFL_PAGE_SIZE);
-  //  index_->
+  index_->AddPage(dti);
 }
 
 int

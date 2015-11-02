@@ -30,7 +30,7 @@ public :
   static CflStorage *Open(const char *name);
   static int Close(CflStorage *storage);
 
-  void WritePage(void *page, uint32_t rows_count);
+  void WritePage(void *page, uint32_t rows_count, cfl_dti_t dti);
 
 private :
   CflIndex *index_;

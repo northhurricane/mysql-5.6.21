@@ -1,5 +1,6 @@
 #include <string.h>
 #include "cfl_data.h"
+#include "cfl_page.h"
 
 int
 cfl_data_file_name(char *buffer, uint32_t buffer_size, const char *name)
@@ -75,7 +76,9 @@ CflData::WritePage(void *page, uint32_t page_size)
 {
   uint64_t offset = 0;
 
-  int r = cf_write(&cf_file_, offset, page, page_size);
+  DBUG_ASSERT(page_size == CFL_PAGE_SIZE);
+  offset = curr_page_no_ * CFL_PAGE_SIZE;
+  int r = cf_write(&cf_file_, offset, page, CFL_PAGE_SIZE);
   if (r < 0)
     return -1;
 

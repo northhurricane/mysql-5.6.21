@@ -23,6 +23,8 @@ public :
 
 private :
   cf_t cf_file_;
+  uint32_t curr_page_no_;  //0-based。当前写入页的编号
+  uint64_t file_size_; //当前文件大小
 };
 
 #endif //_CFL_DATA_H_
