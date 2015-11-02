@@ -80,6 +80,10 @@ CflIndex::Create(const char *name)
   index->buffer_ = (uint8_t*)malloc(CFL_INDEX_BUFFER_INIT_SIZE);
   index->buffer_size_ = CFL_INDEX_BUFFER_INIT_SIZE;
 
+  r = cf_read(&index->cf_file_, 0, index->buffer_
+              , CFL_INDEX_BUFFER_INIT_SIZE, CFL_INDEX_BUFFER_INIT_SIZE);
+  index->node_count_ = index->ReadNodeCount();
+
   return index;
 }
 
