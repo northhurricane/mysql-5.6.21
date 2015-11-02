@@ -26,7 +26,9 @@ index node:64bit，对应的数据页的最小时间节点
 #define CFL_INDEX_HEAD_FIX_SIZE (512)
 #define CFL_INDEX_HEAD_TAIL (CFL_INDEX_HEAD_FIX_SIZE)
 
-#define CFL_INDEX_FILE_SUFFIX ".cfli" 
+#define CFL_INDEX_FILE_SUFFIX ".cfli"
+
+#define CFL_INDEX_BUFFER_INIT_SIZE (1024 * 1024)
 
 class CflIndex
 {
@@ -58,14 +60,27 @@ private :
   {
     uint8_t *nth_node = buffer_ + CFL_INDEX_HEAD_TAIL
                                + nth * CFL_DTI_STORAGE_SIZE;
-    return endian_read_uint64(nth_node);
+    return cfl_s2dti(nth_node);
+    //    return endian_read_uint64(nth_node);
   }
+  int WriteNthIndexNode(uint32_t nth, cfl_dti_t dti)
+  {
+    uint8_t *nth_node = buffer_ + CFL_INDEX_HEAD_TAIL
+                               + nth * CFL_DTI_STORAGE_SIZE;
+    cfl_dti2s(dti, nth_node);
+    return 0;
+  }
+
   //操作的文件
   cf_t cf_file_;
 
   //缓冲区，作为index文件的镜像，便于快速读取
   uint8_t *buffer_;
-  uint32_t *buffer_size_;
+  uint32_t buffer_size_;
+
+  uint32_t node_count_;
+  int WriteHead();
+  void IncrNodeCount() ;
 };
 
 #endif //_CFL_INDEX_H_

@@ -15,8 +15,27 @@ int
 CflIndex::AddPage(cfl_dti_t dti)
 {
   //写入index node
+  WriteNthIndexNode(node_count_, dti);
+  IncrNodeCount();
   //写入头数据
+  WriteHead();
   return 0;
+}
+
+int
+CflIndex::WriteHead()
+{
+  int r = cf_write(&cf_file_, 0, buffer_, CFL_INDEX_HEAD_FIX_SIZE);
+  if (r < 0)
+    return -1;
+  return 0;
+}
+
+void
+CflIndex::IncrNodeCount()
+{
+  node_count_++;
+  WriteNodeCount(node_count_);
 }
 
 int
@@ -58,6 +77,8 @@ CflIndex::Create(const char *name)
     delete index;
     return NULL;
   }
+  index->buffer_ = (uint8_t*)malloc(CFL_INDEX_BUFFER_INIT_SIZE);
+  index->buffer_size_ = CFL_INDEX_BUFFER_INIT_SIZE;
 
   return index;
 }
@@ -66,6 +87,8 @@ int
 CflIndex::Destroy(CflIndex *index)
 {
   int r = cf_close(&index->cf_file_);
+  if (index->buffer_ != NULL)
+    free(index->buffer_);
 
   delete index;
   if (r < 0)
