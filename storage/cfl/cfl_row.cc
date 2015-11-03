@@ -87,9 +87,6 @@ cfl_field_from_mysql(Field *field, void *buf, uint32_t buf_size)
   return 0;
 }
 
-/*
-  将mysql的数据转换为cfl进行存储的行数据
-*/
 uint32_t
 cfl_row_from_mysql(Field ** fields, uchar *row
                    , void *row_buf, uint32_t buf_size, cfl_dti_t *key)
@@ -122,4 +119,14 @@ cfl_row_from_mysql(Field ** fields, uchar *row
     }
   }
   return cfl_row_size;
+}
+
+int
+cfl_row_to_mysql(Field ** fields, uchar *buf, uchar *row)
+{
+  for (Field **field = fields ; *field ; field++)
+  {
+  }
+
+  return 0;
 }

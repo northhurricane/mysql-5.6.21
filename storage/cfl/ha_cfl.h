@@ -38,6 +38,7 @@
 #include "thr_lock.h"                    /* THR_LOCK, THR_LOCK_DATA */
 #include "handler.h"                     /* handler */
 #include "my_base.h"                     /* ha_rows */
+#include <stdint.h>
 
 class CflTable;
 
@@ -57,6 +58,19 @@ public:
   }
 };
 
+struct cfl_rnd_struct
+{
+  uint32_t page_no;   //rnd的当前页
+  uint32_t record_no; //rnd的当前页的当前record
+};
+typedef struct cfl_rnd_struct cfl_rnd_t;
+
+inline void cfl_rnd_init(cfl_rnd_t *cfl_rnd)
+{
+  cfl_rnd->page_no = 0;
+  cfl_rnd->record_no = 0;
+}
+
 /** @brief
   Class definition for the storage engine
 */
@@ -65,6 +79,8 @@ class ha_cfl: public handler
   THR_LOCK_DATA lock;      ///< MySQL lock
   Cfl_share *share;    ///< Shared lock info
   Cfl_share *get_share(); ///< Get the share
+
+  cfl_rnd_t cfl_rnd_;
 
 public:
   ha_cfl(handlerton *hton, TABLE_SHARE *table_arg);

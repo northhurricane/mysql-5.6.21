@@ -557,6 +557,9 @@ int ha_cfl::index_last(uchar *buf)
 int ha_cfl::rnd_init(bool scan)
 {
   DBUG_ENTER("ha_cfl::rnd_init");
+
+  cfl_rnd_init(&cfl_rnd_);
+  
   DBUG_RETURN(0);
 }
 
@@ -588,6 +591,7 @@ int ha_cfl::rnd_next(uchar *buf)
   MYSQL_READ_ROW_START(table_share->db.str, table_share->table_name.str,
                        TRUE);
   rc= HA_ERR_END_OF_FILE;
+  //更新cfl_rnd的
   MYSQL_READ_ROW_DONE(rc);
   DBUG_RETURN(rc);
 }
