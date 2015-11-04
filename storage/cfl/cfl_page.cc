@@ -55,6 +55,14 @@ CflPageMaker::Flush(CflStorage *storage)
 
 
 /********************CflPageManager**********************/
+CflPagePool *CflPageManager::pools_[CflPageMaxPool];
+
+uint8_t CflPageManager::pools_number_ = 0;
+
+bool CflPageManager::initialized_ = false;
+
+uint8_t CflPageManager::curr_pool_ = 0;
+
 int
 CflPageManager::Initialize(int pools_number, int pool_size)
 {
