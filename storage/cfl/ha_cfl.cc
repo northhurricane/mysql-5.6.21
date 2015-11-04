@@ -367,7 +367,7 @@ int ha_cfl::write_row(uchar *buf)
     here, to pretend that the insert was successful.
   */
   //获取记录的长度
-  uint32_t rec_length = table->s->reclength;
+  //  uint32_t rec_length = table->s->reclength;
   uint8_t cfl_row_buf[65536];
   uint32_t cfl_row_size = 0;
   cfl_dti_t key_dti = 0;

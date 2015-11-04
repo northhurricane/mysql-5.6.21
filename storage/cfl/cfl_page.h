@@ -2,9 +2,12 @@
 #define _CFL_PAGE_H_
 
 #include <stdint.h>
+#include <list>
 #include <string.h>
 #include "cfl_endian.h"
 #include "cfl_dt.h"
+
+using namespace std;
 /*
 页存储单元
 每页设计为1M大小
@@ -128,6 +131,69 @@ private :
       free(buffer_);
   }
 
+};
+
+class CflPagePool;
+
+/*
+  内存中的页对象
+*/
+class CflPage
+{
+private :
+  void *page_; //页缓冲区
+  uint8_t pool_id_;
+
+public :
+  uint8_t pool_id() { return pool_id_; }
+  void *page() { return page_; }
+};
+
+#define CflPageMaxPool (255)
+/*
+  内存页的管理对象
+*/
+class CflPageManager
+{
+public :
+  /*初始化和销毁*/
+  static int Initialize(int pools_number, int pool_size);
+  static int Deinitialize();
+
+  /*从存储中获取页*/
+  static CflPage* GetPage(CflStorage *storage, uint32_t nth_page);
+  /*将数据页归还*/
+  static int PutPage(CflPage *page);
+
+private :
+  //Manager下管理的pool
+  static CflPagePool *pools_[CflPageMaxPool];
+  static uint8_t pools_number_;
+  static bool initialized_;
+  static uint8_t curr_pool_;
+};
+
+class CflPagePool
+{
+private :
+  friend class CflPageManager;
+
+  static CflPagePool* Create(int size, uint8_t id);
+  static int Destroy(CflPagePool *pool);
+
+  CflPage *GetPage(CflStorage *storage, uint32_t nth_page);
+  int PutPage(CflPage *page);
+
+  uint8_t id_; //每个pool都有自己的id，这个id在程序上和CflPageManager的pools_中元素位置相对应
+
+  uint8_t *pages_buffer_; //可以使用的页面缓冲区
+  CflPage *pages_;  //指向CflPage类对象的数组指针
+  int size_;        //pool中可缓冲的页面数目
+
+  mysql_mutex_t mutex_;
+  list<CflPage*> free_pages_;
+  CflPage *Dequeue();
+  int Enqueue(CflPage *page);
 };
 
 #endif //_CFL_PAGE_H_

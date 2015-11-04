@@ -5,11 +5,19 @@
 #include "cfl_page.h"
 
 /*CflStorage*/
-void
+int
 CflStorage::WritePage(void *page, uint32_t rows_count, cfl_dti_t dti)
 {
   data_->WritePage(page, CFL_PAGE_SIZE);
   index_->AddPage(dti);
+
+  return 0;
+}
+
+int
+CflStorage::ReadPage(void *buffer, uint32_t buffer_size, uint32_t nth_page)
+{
+  return 0;
 }
 
 int

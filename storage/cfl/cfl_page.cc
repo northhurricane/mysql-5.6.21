@@ -54,5 +54,178 @@ CflPageMaker::Flush(CflStorage *storage)
 }
 
 
+/********************CflPageManager**********************/
+int
+CflPageManager::Initialize(int pools_number, int pool_size)
+{
+  CflPagePool *pool = NULL;
+  bool fail = false;
 
+  int id = 0;
+  for (id = 0; id < pools_number; id++)
+  {
+    pool = CflPagePool::Create(pool_size, (uint8_t)id);
+    if (pool == NULL)
+    {
+      fail = true;
+      break;
+    }
+    
+    pools_[id] = pool;
+  }
 
+  if (fail)
+  {
+    //错误处理，释放已有资源
+    return -1;
+  }
+
+  pools_number_ = pools_number;
+  curr_pool_ = 0;
+
+  return 0;
+}
+
+int
+CflPageManager::Deinitialize()
+{
+  int id = 0;
+  CflPagePool *pool;
+  int r = 0;
+  int fail_count = 0;
+
+  for (id = 0; id < pools_number_; id++)
+  {
+    pool = pools_[id];
+    r = CflPagePool::Destroy(pool);
+    if (r < 0)
+      fail_count++;
+  }
+
+  if (fail_count > 0)
+  {
+    //出现错误
+  }
+
+  return 0;
+}
+
+CflPage*
+CflPageManager::GetPage(CflStorage *storage, uint32_t nth_page)
+{
+  CflPage *page = NULL;
+  CflPagePool *pool = NULL;
+
+  uint8_t pool_id = 0;
+  //to do : 获取一个page pool
+  pool = pools_[pool_id];
+
+  page = pool->GetPage(storage, nth_page);
+
+  return page;
+}
+
+int
+CflPageManager::PutPage(CflPage *page)
+{
+  uint8_t pool_id = page->pool_id();
+
+  CflPagePool *pool = pools_[pool_id];
+
+  pool->PutPage(page);
+
+  return 0;
+}
+
+/**********************CflPagePool************************/
+CflPagePool*
+CflPagePool::Create(int size, uint8_t id)
+{
+  CflPagePool *pool = NULL;
+  CflPage *page = NULL;
+
+  pool = new CflPagePool();
+  if (pool == NULL)
+  {
+  }
+
+  //分配页面
+  pool->pages_buffer_ = (uint8_t*)malloc(size * CFL_PAGE_SIZE);
+  if (pool->pages_buffer_ == NULL)
+  {
+  }
+  pool->pages_ = new CflPage[size];
+  if (pool->pages_ == NULL)
+  {
+  }
+  for (int i = 0; i < size; i++)
+  {
+    //初始化页对象
+    page = pool->pages_ + i;
+  }
+
+  mysql_mutex_init(NULL, &pool->mutex_, MY_MUTEX_INIT_FAST);
+
+  pool->id_ = id;
+  return pool;
+}
+
+int
+CflPagePool::Destroy(CflPagePool *pool)
+{
+  return 0;
+}
+
+CflPage*
+CflPagePool::GetPage(CflStorage *storage, uint32_t nth_page)
+{
+  CflPage *page = NULL;
+  int r = 0;
+
+  //获取内存页对象
+  page = Dequeue();
+  //读取文件内容
+  r = storage->ReadPage(page->page(), CFL_PAGE_SIZE, nth_page);
+  if (r < 0)
+  {
+  }
+
+  return page;
+}
+
+int
+CflPagePool::PutPage(CflPage *page)
+{
+  DBUG_ASSERT(page->pool_id() == id_);
+  Enqueue(page);
+  return 0;
+}
+
+CflPage*
+CflPagePool::Dequeue()
+{
+  CflPage *page = NULL;
+
+  mysql_mutex_lock(&mutex_);
+  if (free_pages_.size() > 0)
+  {
+    page = free_pages_.front();
+    free_pages_.pop_front();
+  }
+
+  mysql_mutex_unlock(&mutex_);
+
+  return page;
+}
+
+int
+CflPagePool::Enqueue(CflPage *page)
+{
+  mysql_mutex_lock(&mutex_);
+
+  free_pages_.push_back(page);
+
+  mysql_mutex_unlock(&mutex_);
+
+  return 0;
+}
