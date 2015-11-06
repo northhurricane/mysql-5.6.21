@@ -62,6 +62,7 @@ struct cfl_rnd_struct
 {
   uint32_t page_no;   //rnd的当前页
   uint32_t record_no; //rnd的当前页的当前record
+  uint32_t counter;   //计数用
 };
 typedef struct cfl_rnd_struct cfl_rnd_t;
 
@@ -69,6 +70,7 @@ inline void cfl_rnd_init(cfl_rnd_t *cfl_rnd)
 {
   cfl_rnd->page_no = 0;
   cfl_rnd->record_no = 0;
+  cfl_rnd->counter = 0;
 }
 
 /** @brief

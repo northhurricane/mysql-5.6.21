@@ -51,7 +51,7 @@ cfl_field_from_mysql(Field *field, void *buf, uint32_t buf_size)
   case MYSQL_TYPE_LONGLONG:
   {
     int64_t v = field->val_int();
-    endian_write_uint16(buf, (uint64_t)v);
+    endian_write_uint64(buf, (uint64_t)v);
     return sizeof(uint64_t);
   }
   case MYSQL_TYPE_TIMESTAMP:
@@ -84,6 +84,61 @@ cfl_field_from_mysql(Field *field, void *buf, uint32_t buf_size)
     break;
   }
   }
+  return 0;
+}
+
+inline int
+cfl_field_2_mysql(Field *field)
+{
+  enum_field_types type = field->type();
+  switch (type)
+  {
+  case MYSQL_TYPE_TINY:
+  {
+    int8_t v2 = (int8_t)123;
+    //endian_write_uint8(buf, (uint8_t)v2);
+    field->store(v2);
+    return sizeof(uint8_t);
+  }
+  case MYSQL_TYPE_SHORT:
+  {
+    int16_t v2 = (int16_t)123;
+    //endian_write_uint16(buf, (uint16_t)v2);
+    field->store(v2);
+    return sizeof(uint16_t);
+  }
+  case MYSQL_TYPE_LONG:
+  {
+    int32_t v2 = (int32_t)123;
+    //endian_write_uint32(buf, (uint32_t)v2);
+    field->store(v2);
+    return sizeof(uint32_t);
+  }
+  case MYSQL_TYPE_LONGLONG:
+  {
+    int64_t v2 = (int64_t)123;
+    //endian_write_uint16(buf, (uint64_t)v);
+    field->store(v2);
+    return sizeof(uint64_t);
+  }
+  case MYSQL_TYPE_TIMESTAMP:
+  {
+    MYSQL_TIME mtime;
+    mtime.time_type = MYSQL_TIMESTAMP_DATETIME;
+    mtime.year = 2015; mtime.month = 11; mtime.day = 6;
+    mtime.hour = 14; mtime.minute = 20; mtime.second = 20;
+    mtime.second_part = 999;
+    field->store_time(&mtime);
+    return CFL_DTI_STORAGE_SIZE;
+  }
+  default:
+  {
+    char test[] = "abc";
+    field->store(test, 3, &my_charset_bin, CHECK_FIELD_IGNORE);
+    return 1;
+  }
+  }
+  
   return 0;
 }
 
@@ -126,6 +181,7 @@ cfl_row_to_mysql(Field ** fields, uchar *buf, uchar *row)
 {
   for (Field **field = fields ; *field ; field++)
   {
+    cfl_field_2_mysql(*field);
   }
 
   return 0;

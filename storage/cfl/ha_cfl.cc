@@ -586,13 +586,30 @@ int ha_cfl::rnd_end()
 */
 int ha_cfl::rnd_next(uchar *buf)
 {
-  int rc;
+  int rc = 0;
   DBUG_ENTER("ha_cfl::rnd_next");
   MYSQL_READ_ROW_START(table_share->db.str, table_share->table_name.str,
                        TRUE);
-  rc= HA_ERR_END_OF_FILE;
-  //更新cfl_rnd的
-  MYSQL_READ_ROW_DONE(rc);
+
+  if (cfl_rnd_.counter == 1)
+  {
+    rc= HA_ERR_END_OF_FILE;
+    //更新cfl_rnd的
+    MYSQL_READ_ROW_DONE(rc);
+    return rc;
+  }
+  my_bitmap_map *org_bitmap;
+  bool read_all;
+  /* We must read all columns in case a table is opened for update */
+  read_all= !bitmap_is_clear_all(table->write_set);
+  /* Avoid asserts in ::store() for columns that are not going to be updated */
+  org_bitmap= dbug_tmp_use_all_columns(table, table->write_set);
+
+  cfl_row_to_mysql(table->field, buf, NULL);
+  cfl_rnd_.counter++;
+
+  dbug_tmp_restore_column_map(table->write_set, org_bitmap);
+
   DBUG_RETURN(rc);
 }
 
