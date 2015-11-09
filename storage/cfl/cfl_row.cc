@@ -177,8 +177,13 @@ cfl_row_from_mysql(Field ** fields, uchar *row
 }
 
 int
-cfl_row_to_mysql(Field ** fields, uchar *buf, uchar *row)
+cfl_row_to_mysql(Field ** fields, uchar *buf, uchar *row, 
+                 uint8_t *cfl_row, uint32_t row_length)
 {
+  uint8_t *cfl_field = NULL;
+  uint32_t cfl_field_length = 0;
+  bool is_null = false;
+
   for (Field **field = fields ; *field ; field++)
   {
     cfl_field_2_mysql(*field);

@@ -20,6 +20,10 @@ rows data
 rows index
 page magic tail
 */
+/*
+页头格式
+row count:页面内记录数量
+*/
 
 #define CFL_PAGE_SIZE (1024 * 1024)
 
@@ -141,6 +145,7 @@ class CflPagePool;
 class CflPage
 {
 private :
+  friend class CflPagePool;
   void *page_; //页缓冲区
   uint8_t pool_id_;
 

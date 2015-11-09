@@ -17,6 +17,7 @@ cfl_row_from_mysql(Field ** fields, uchar *row
   返回:失败-1，成功转换后的行长度
 */
 int
-cfl_row_to_mysql(Field ** fields, uchar *buf, uchar *row);
+cfl_row_to_mysql(Field ** fields, uchar *buf, uchar *row, 
+                 uint8_t * cfl_row, uint32_t row_length);
 
 #endif //_CFL_ROW_H_

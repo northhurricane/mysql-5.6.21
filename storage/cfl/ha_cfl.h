@@ -39,6 +39,7 @@
 #include "handler.h"                     /* handler */
 #include "my_base.h"                     /* ha_rows */
 #include <stdint.h>
+#include "cfl_cursor.h"
 
 class CflTable;
 
@@ -58,21 +59,6 @@ public:
   }
 };
 
-struct cfl_rnd_struct
-{
-  uint32_t page_no;   //rnd的当前页
-  uint32_t record_no; //rnd的当前页的当前record
-  uint32_t counter;   //计数用
-};
-typedef struct cfl_rnd_struct cfl_rnd_t;
-
-inline void cfl_rnd_init(cfl_rnd_t *cfl_rnd)
-{
-  cfl_rnd->page_no = 0;
-  cfl_rnd->record_no = 0;
-  cfl_rnd->counter = 0;
-}
-
 /** @brief
   Class definition for the storage engine
 */
@@ -81,8 +67,6 @@ class ha_cfl: public handler
   THR_LOCK_DATA lock;      ///< MySQL lock
   Cfl_share *share;    ///< Shared lock info
   Cfl_share *get_share(); ///< Get the share
-
-  cfl_rnd_t cfl_rnd_;
 
 public:
   ha_cfl(handlerton *hton, TABLE_SHARE *table_arg);
@@ -281,7 +265,16 @@ public:
 
 private :
   CflTable *cfl_table_;
-  int encode_quote(uchar *buf);
+  cfl_cursor_t cursor_;
+  /*
+    获取下一条记录
+    参数:
+      over:输出参数，是否获取结束。true,获取记录成功;false,数据获取
+    返回值:
+      返回0，正确执行；小于0，执行错误。
+  */
+  int fetch_next(bool &over);
+  int next(bool &over);
 };
 
 

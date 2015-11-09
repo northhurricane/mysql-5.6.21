@@ -558,7 +558,7 @@ int ha_cfl::rnd_init(bool scan)
 {
   DBUG_ENTER("ha_cfl::rnd_init");
 
-  cfl_rnd_init(&cfl_rnd_);
+  cfl_cursor_init(cursor_);
   
   DBUG_RETURN(0);
 }
@@ -591,13 +591,6 @@ int ha_cfl::rnd_next(uchar *buf)
   MYSQL_READ_ROW_START(table_share->db.str, table_share->table_name.str,
                        TRUE);
 
-  if (cfl_rnd_.counter == 1)
-  {
-    rc= HA_ERR_END_OF_FILE;
-    //更新cfl_rnd的
-    MYSQL_READ_ROW_DONE(rc);
-    return rc;
-  }
   my_bitmap_map *org_bitmap;
   bool read_all;
   /* We must read all columns in case a table is opened for update */
@@ -605,8 +598,29 @@ int ha_cfl::rnd_next(uchar *buf)
   /* Avoid asserts in ::store() for columns that are not going to be updated */
   org_bitmap= dbug_tmp_use_all_columns(table, table->write_set);
 
-  cfl_row_to_mysql(table->field, buf, NULL);
-  cfl_rnd_.counter++;
+  bool over;
+  int r;
+  r = fetch_next(over);
+  if (r < 0)
+  {
+    //出现错误
+  }
+
+  if (over)
+  {
+    //没有更多的数据
+    rc= HA_ERR_END_OF_FILE;
+    //更新cfl_rnd的
+    MYSQL_READ_ROW_DONE(rc);
+    return rc;
+  }
+
+  //获取cfl的记录数据
+  uint32_t record_length = 0;
+  uint8_t *record = NULL;
+
+  //将cfl的记录数据转换为mysql的记录
+  cfl_row_to_mysql(table->field, buf, NULL, record, record_length);
 
   dbug_tmp_restore_column_map(table->write_set, org_bitmap);
 
@@ -1062,4 +1076,84 @@ mysql_declare_plugin(cfl)
 mysql_declare_plugin_end;
 
 
+/*cfl private handler function*/
+int
+ha_cfl::fetch_next(bool &over)
+{
+  //用于测试，可删除
+  if (cfl_cursor_counter_get(cursor_) == 1)
+  {
+    over = true;
+    return 0;
+  }
+
+  cfl_cursor_counter_inc(cursor_);
+  /*
+    首先定位下一条记录，然后获取记录相关
+  */
+  //定位下一条记录
+  int r;
+  r = next(over);
+  if (r < 0)
+  {
+  }
+
+  if (over)
+  {
+    return 0;
+  }
+
+  //获取记录相关信息
+  //DBUG_ASSERT(cursor_.
+  return 0;
+}
+
+int
+ha_cfl::next(bool &over)
+{
+  uint32_t page_no;
+  uint32_t row_no;
+  uint8_t *row;
+  CflPage *page;
+
+  over = false;
+  if (cfl_cursor_position_get(cursor_) == CFL_CURSOR_BEFOR_START)
+  {
+    page_no = 0;
+    row_no = 0;
+    //CflPageManager::GetPage(
+    //    page = Cf
+  }
+  if (cfl_cursor_position_get(cursor_) == CFL_CURSOR_AFTER_END)
+  {
+    over = true;
+    return 0;
+  }
+
+  //当前记录定位信息
+  page_no = cfl_cursor_page_no_get(cursor_);
+  page = cfl_cursor_page_get(cursor_);
+  row_no = cfl_cursor_row_no_get(cursor_);
+
+  //下一条记录
+  row_no++;
+
+  bool keep_locate = true;
+  while (keep_locate)
+  {
+    //尝试在当前页定位记录
+    bool row_in_current_page = true;
+    if (row_in_current_page)
+    {
+      keep_locate = false;
+    }
+    else
+    {
+      //不在当前页，取得下一页
+      
+    }
+  }
+
+  return 0;
+}
 

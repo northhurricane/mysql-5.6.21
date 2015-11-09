@@ -30,6 +30,10 @@ index node:64bit，对应的数据页的最小时间节点
 
 #define CFL_INDEX_BUFFER_INIT_SIZE (1024 * 1024)
 
+struct cfl_index_entry_struct
+{
+};
+
 class CflIndex
 {
 public :
