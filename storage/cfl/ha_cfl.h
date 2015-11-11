@@ -274,6 +274,9 @@ private :
       返回0，正确执行；小于0，执行错误。
   */
   int fetch_next(bool &over);
+  /*
+    定位到下一条记录。如果记录存在，则对应的页将加载至内存中
+  */
   int next(bool &over);
 };
 

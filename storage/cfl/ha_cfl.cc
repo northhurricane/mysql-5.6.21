@@ -1113,16 +1113,24 @@ ha_cfl::next(bool &over)
 {
   uint32_t page_no;
   uint32_t row_no;
-  uint8_t *row;
-  CflPage *page;
+  CflPage *page = NULL;
+  /*
+    算法说明
+      page_no和row_no进行下一行的定位
+    实现说明
+      ClfPage的申请和释放要注意，不要造成未释放的页面存在
+  */
 
   over = false;
+  /*特殊情况处理*/
   if (cfl_cursor_position_get(cursor_) == CFL_CURSOR_BEFOR_START)
   {
     page_no = 0;
     row_no = 0;
-    //CflPageManager::GetPage(
-    //    page = Cf
+    CflPageManager::
+    cfl_cursor_page_set(cursor_, page);
+    //尝试获取第一页，如果不存在，则设为CFL_CURSOR_AFTER_END
+    cfl_cursor_position_set(cursor_, CFL_CURSOR_AFTER_END);
   }
   if (cfl_cursor_position_get(cursor_) == CFL_CURSOR_AFTER_END)
   {
@@ -1130,27 +1138,44 @@ ha_cfl::next(bool &over)
     return 0;
   }
 
-  //当前记录定位信息
+  //获取下一条记录的位置信息
   page_no = cfl_cursor_page_no_get(cursor_);
   page = cfl_cursor_page_get(cursor_);
   row_no = cfl_cursor_row_no_get(cursor_);
-
-  //下一条记录
   row_no++;
 
-  bool keep_locate = true;
-  while (keep_locate)
+  /*
+    有如下情况
+    1、在当前页找到数据.成功返回
+    2、记录可能在下一页。此时又存在两种情况
+      2-1、下一页存在。如果记录页存在，其中必有记录，next一定会获得一条记录
+      2-2、下一页不存在。说明已经完成所有记录的next，设置cursor状态为CFL_CURSOR_AFTER_END
+  */
+  bool row_in_current_page = true;
+  if (row_in_current_page)
   {
-    //尝试在当前页定位记录
-    bool row_in_current_page = true;
-    if (row_in_current_page)
+    //获取行
+  }
+  else
+  {
+    //行不在当前页，释放cursor当前的页，取得下一页
+    CflPageManager::PutPage(page);
+    page_no++;
+    row_no = 0;
+    page = CflPageManager::GetPage(cfl_table_->GetStorage(), page_no);
+    //后续页是否存在
+    if (page != NULL)
     {
-      keep_locate = false;
+      //获取数据
+      cfl_cursor_page_set(cursor_, page);
+      cfl_cursor_page_no_set(cursor_, page_no);
+      cfl_cursor_row_no_set(cursor_, row_no);
     }
     else
     {
-      //不在当前页，取得下一页
-      
+      //
+      cfl_cursor_position_set(cursor_, CFL_CURSOR_AFTER_END);
+      over = true;
     }
   }
 

@@ -63,6 +63,7 @@ public :
 
 public :
   void Insert(cfl_dti_t key, void *row, uint16_t row_size);
+  CflStorage *GetStorage() { return storage_; }
 
 private :
   int Initialize(const char *name);
