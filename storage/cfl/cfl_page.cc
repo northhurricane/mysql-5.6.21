@@ -170,6 +170,9 @@ CflPagePool::Create(int size, uint8_t id)
   {
     //初始化页对象
     page = pool->pages_ + i;
+    page->pool_id_ = id;
+    page->page_ = pool->pages_buffer_ + i * CFL_PAGE_SIZE;
+    pool->free_pages_.push_back(page);
   }
 
   mysql_mutex_init(NULL, &pool->mutex_, MY_MUTEX_INIT_FAST);

@@ -115,6 +115,17 @@ Cfl_share::Cfl_share()
                    &mutex, MY_MUTEX_INIT_FAST);
 }
 
+static int
+cfl_init_handlerton(handlerton *cfl_ton)
+{
+  cfl_ton->state=                     SHOW_OPTION_YES;
+  cfl_ton->create=                    cfl_create_handler;
+  cfl_ton->flags=                     HTON_CAN_RECREATE;
+  cfl_ton->system_database=   cfl_system_database;
+  cfl_ton->is_supported_system_table= cfl_is_supported_system_table;
+
+  return 0;
+}
 
 static int cfl_init_func(void *p)
 {
@@ -125,13 +136,18 @@ static int cfl_init_func(void *p)
 #endif
 
   cfl_ton= (handlerton *)p;
-  cfl_ton->state=                     SHOW_OPTION_YES;
-  cfl_ton->create=                    cfl_create_handler;
-  cfl_ton->flags=                     HTON_CAN_RECREATE;
-  cfl_ton->system_database=   cfl_system_database;
-  cfl_ton->is_supported_system_table= cfl_is_supported_system_table;
+
+  cfl_init_handlerton(cfl_ton);
+  CflPageManager::Initialize(1, 10);
 
   DBUG_RETURN(0);
+}
+
+static int cfl_deinit_func(void *p)
+{
+  CflPageManager::Deinitialize();
+
+  return 0;
 }
 
 
@@ -1066,12 +1082,12 @@ mysql_declare_plugin(cfl)
   "ctrip fast log storage engine",
   PLUGIN_LICENSE_GPL,
   cfl_init_func,                            /* Plugin Init */
-  NULL,                                         /* Plugin Deinit */
-  0x0001 /* 0.1 */,
-  cfl_status,                                  /* status variables */
-  cfl_variables,                     /* system variables */
-  NULL,                                         /* config options */
-  0,                                            /* flags */
+  cfl_deinit_func,                          /* Plugin Deinit */
+  0x0001,                                   /* 0.1 */
+  cfl_status,                               /* status variables */
+  cfl_variables,                            /* system variables */
+  NULL,                                     /* config options */
+  0,                                        /* flags */
 }
 mysql_declare_plugin_end;
 
@@ -1104,7 +1120,11 @@ ha_cfl::fetch_next(bool &over)
   }
 
   //获取记录相关信息
-  //DBUG_ASSERT(cursor_.
+  r = fetch();
+  if (r < 0)
+  {
+  }
+
   return 0;
 }
 
@@ -1127,10 +1147,15 @@ ha_cfl::next(bool &over)
   {
     page_no = 0;
     row_no = 0;
-    CflPageManager::
-    cfl_cursor_page_set(cursor_, page);
+    page = CflPageManager::GetPage(cfl_table_->GetStorage(), page_no);
     //尝试获取第一页，如果不存在，则设为CFL_CURSOR_AFTER_END
-    cfl_cursor_position_set(cursor_, CFL_CURSOR_AFTER_END);
+    if (page == NULL)
+    {
+      over = true;
+      cfl_cursor_position_set(cursor_, CFL_CURSOR_AFTER_END);
+      return 0;
+    }
+    cfl_cursor_page_set(cursor_, page);
   }
   if (cfl_cursor_position_get(cursor_) == CFL_CURSOR_AFTER_END)
   {
@@ -1178,6 +1203,35 @@ ha_cfl::next(bool &over)
       over = true;
     }
   }
+
+  return 0;
+}
+
+int
+ha_cfl::fetch()
+{
+  uint32_t row_no, row_count;
+  CflPage  *page;
+  uint8_t  *buffer;
+  uint8_t  *nth_off;
+  uint8_t  *row;
+  uint32_t offset;
+
+  page = cfl_cursor_page_get(cursor_);
+  DBUG_ASSERT(page != NULL);
+
+  buffer = (uint8_t*)page->page();
+  row_count = cfl_page_read_row_count(buffer);
+
+  row_count = cfl_cursor_row_no_get(cursor_);
+  row_no = cfl_cursor_row_no_get(cursor_);
+  DBUG_ASSERT(row_no <= row_count);
+
+  nth_off = cfl_page_nth_row_offset(buffer, row_no);
+  offset = cfl_page_read_row_offset(nth_off);
+  row = buffer + offset;
+
+  cfl_cursor_row_set(cursor_, row);
 
   return 0;
 }

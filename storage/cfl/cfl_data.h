@@ -20,6 +20,11 @@ public :
   static int Destroy(CflData *data);
 
   int WritePage(void *page, uint32_t page_size);
+  /*
+    读取指定页面
+    参数
+   */
+  int ReadPage(void *buffer, uint32_t buffer_size, uint32_t nth_page);
 
 private :
   cf_t cf_file_;

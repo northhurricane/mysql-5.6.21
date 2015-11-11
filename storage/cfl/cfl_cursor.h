@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 
-#define CFL_CURSOR_BEFOR_START (0xFFFFFFFF)
-#define CFL_CURSOR_AFTER_END   (0xFFFFFFFE)
+#define CFL_CURSOR_BEFOR_START (0xFFFFFFFFFFFFFFFF)
+#define CFL_CURSOR_AFTER_END   (0xFFFFFFFFFFFFFFFE)
 
 class CflPage;
 
@@ -82,6 +82,18 @@ CflPage* cfl_cursor_page_get(cfl_cursor_t &cursor)
 void cfl_cursor_page_set(cfl_cursor_t &cursor, CflPage *page)
 {
   cursor.page = page;
+}
+
+uint8_t*
+cfl_cursor_row_get(cfl_cursor_t &cursor)
+{
+  return cursor.row;
+}
+
+void
+cfl_cursor_row_set(cfl_cursor_t &cursor, uint8_t *row)
+{
+  cursor.row = row;
 }
 
 #endif //_CFL_CURSOR_H_
