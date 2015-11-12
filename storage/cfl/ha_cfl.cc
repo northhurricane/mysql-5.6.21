@@ -628,7 +628,7 @@ int ha_cfl::rnd_next(uchar *buf)
     rc= HA_ERR_END_OF_FILE;
     //更新cfl_rnd的
     MYSQL_READ_ROW_DONE(rc);
-    return rc;
+    DBUG_RETURN(rc);
   }
 
   //获取cfl的记录数据
