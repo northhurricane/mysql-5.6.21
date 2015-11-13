@@ -74,6 +74,7 @@ CflIndex::Create(const char *name)
   int r = cf_open(index_file_name, &index->cf_file_);
   if (r < 0)
   {
+    printf(strerror(errno));
     delete index;
     return NULL;
   }

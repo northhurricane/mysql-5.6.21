@@ -607,12 +607,6 @@ int ha_cfl::rnd_next(uchar *buf)
   MYSQL_READ_ROW_START(table_share->db.str, table_share->table_name.str,
                        TRUE);
 
-  my_bitmap_map *org_bitmap;
-  bool read_all;
-  /* We must read all columns in case a table is opened for update */
-  read_all= !bitmap_is_clear_all(table->write_set);
-  /* Avoid asserts in ::store() for columns that are not going to be updated */
-  org_bitmap= dbug_tmp_use_all_columns(table, table->write_set);
 
   bool over;
   int r;
@@ -632,11 +626,21 @@ int ha_cfl::rnd_next(uchar *buf)
   }
 
   //获取cfl的记录数据
-  uint32_t record_length = 0;
-  uint8_t *record = NULL;
+  uint32_t row_length = 0;
+  uint8_t *row = NULL;
 
+  my_bitmap_map *org_bitmap;
+  bool read_all;
+  /* We must read all columns in case a table is opened for update */
+  read_all= !bitmap_is_clear_all(table->write_set);
+  /* Avoid asserts in ::store() for columns that are not going to be updated */
+  org_bitmap= dbug_tmp_use_all_columns(table, table->write_set);
+
+  memset(buf, 0, table->s->null_bytes);
+  row = cfl_cursor_row_get(cursor_);
+  row_length = cfl_cursor_row_length_get(cursor_);
   //将cfl的记录数据转换为mysql的记录
-  cfl_row_to_mysql(table->field, buf, NULL, record, record_length);
+  cfl_row_to_mysql(table->field, buf, NULL, row, row_length);
 
   dbug_tmp_restore_column_map(table->write_set, org_bitmap);
 
@@ -1136,19 +1140,24 @@ ha_cfl::next(bool &over)
   CflPage *page = NULL;
   /*
     算法说明
-      page_no和row_no进行下一行的定位
+      page_no和row_no进行下一行的定位标识
+      进入next的时候存在3种情况
+        1、从未获取过记录，此时cursor的postion为CFL_CURSOR_BEFOR_START
+        2、所有记录已经获取，此时cursor的postion为CFL_CURSOR_AFTER_END
+        3、获取其中记录。此时cursor的postion为获取的记录数
     实现说明
       ClfPage的申请和释放要注意，不要造成未释放的页面存在
   */
 
   over = false;
-  /*特殊情况处理*/
   if (cfl_cursor_position_get(cursor_) == CFL_CURSOR_BEFOR_START)
   {
+    /*情况1处理*/
     page_no = 0;
     row_no = 0;
     page = CflPageManager::GetPage(cfl_table_->GetStorage(), page_no);
     //尝试获取第一页，如果不存在，则设为CFL_CURSOR_AFTER_END
+    //todo : 也有可能页面不足。需要改进pagepool的调度算法
     if (page == NULL)
     {
       over = true;
@@ -1157,17 +1166,21 @@ ha_cfl::next(bool &over)
     }
     cfl_cursor_page_set(cursor_, page);
   }
-  if (cfl_cursor_position_get(cursor_) == CFL_CURSOR_AFTER_END)
+  else if (cfl_cursor_position_get(cursor_) == CFL_CURSOR_AFTER_END)
   {
+    /*情况2处理*/
     over = true;
     return 0;
   }
-
-  //获取下一条记录的位置信息
-  page_no = cfl_cursor_page_no_get(cursor_);
-  page = cfl_cursor_page_get(cursor_);
-  row_no = cfl_cursor_row_no_get(cursor_);
-  row_no++;
+  else
+  {
+    /*情况3处理*/
+    //获取下一条记录的位置信息
+    page_no = cfl_cursor_page_no_get(cursor_);
+    page = cfl_cursor_page_get(cursor_);
+    row_no = cfl_cursor_row_no_get(cursor_);
+    row_no++;
+  }
 
   /*
     有如下情况
@@ -1180,6 +1193,7 @@ ha_cfl::next(bool &over)
   if (row_in_current_page)
   {
     //获取行
+    cfl_cursor_row_no_set(cursor_, row_no);    
   }
   else
   {
@@ -1198,8 +1212,9 @@ ha_cfl::next(bool &over)
     }
     else
     {
-      //
       cfl_cursor_position_set(cursor_, CFL_CURSOR_AFTER_END);
+      cfl_cursor_page_no_set(cursor_, 0);
+      cfl_cursor_row_no_set(cursor_, 0);
       over = true;
     }
   }
@@ -1223,15 +1238,19 @@ ha_cfl::fetch()
   buffer = (uint8_t*)page->page();
   row_count = cfl_page_read_row_count(buffer);
 
-  row_count = cfl_cursor_row_no_get(cursor_);
   row_no = cfl_cursor_row_no_get(cursor_);
-  DBUG_ASSERT(row_no <= row_count);
+  DBUG_ASSERT(row_no < row_count);
 
   nth_off = cfl_page_nth_row_offset(buffer, row_no);
   offset = cfl_page_read_row_offset(nth_off);
   row = buffer + offset;
 
+  uint32_t offset_next;
+  nth_off = cfl_page_nth_row_offset(buffer, row_no + 1);
+  offset_next = cfl_page_read_row_offset(nth_off);
+
   cfl_cursor_row_set(cursor_, row);
+  cfl_cursor_row_length_set(cursor_, offset_next - offset);
 
   return 0;
 }

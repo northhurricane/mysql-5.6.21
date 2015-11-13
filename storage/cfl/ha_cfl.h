@@ -275,11 +275,11 @@ private :
   */
   int fetch_next(bool &over);
   /*
-    定位到下一条记录。如果记录存在，则对应的页将加载至内存中
+    定位到下一条记录。
   */
   int next(bool &over);
   /*
-    取得页面内行的指针
+    取得页面内行的指针.
   */
   int fetch();
 };

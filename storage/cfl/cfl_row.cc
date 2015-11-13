@@ -76,12 +76,18 @@ cfl_field_from_mysql(Field *field, void *buf, uint32_t buf_size)
   default:
   {
     //统一转换为字符串类型
-    char attribute_buffer[1024];
-    String attribute(attribute_buffer, sizeof(attribute_buffer),
+    char value_buffer[1024];
+    String value(value_buffer, sizeof(value_buffer),
                      &my_charset_bin);
 
-    field->val_str(&attribute,&attribute);
-    break;
+    field->val_str(&value,&value);
+
+    uint32_t str_len = value.length();
+    uint8_t *offset = (uint8_t*)buf;
+    endian_write_uint16(offset, str_len);
+    offset += sizeof(uint16_t);
+    memcpy(offset, value.ptr(), str_len);
+    return sizeof(uint16_t) + str_len;
   }
   }
   return 0;
@@ -182,7 +188,6 @@ cfl_row_to_mysql(Field ** fields, uchar *buf, uchar *row,
 {
   uint8_t *cfl_field = NULL;
   uint32_t cfl_field_length = 0;
-  bool is_null = false;
 
   for (Field **field = fields ; *field ; field++)
   {

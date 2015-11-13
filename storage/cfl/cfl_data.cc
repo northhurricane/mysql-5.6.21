@@ -92,7 +92,7 @@ CflData::ReadPage(void *buffer, uint32_t buffer_size, uint32_t nth_page)
 
   DBUG_ASSERT(buffer_size == CFL_PAGE_SIZE);
   offset = nth_page * CFL_PAGE_SIZE;
-  int r = cf_write(&cf_file_, offset, buffer, CFL_PAGE_SIZE);
+  int r = cf_read(&cf_file_, offset, buffer, CFL_PAGE_SIZE, CFL_PAGE_SIZE);
   if (r < 0)
     return -1;
 

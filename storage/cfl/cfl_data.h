@@ -23,6 +23,7 @@ public :
   /*
     读取指定页面
     参数
+      nth_page:0-based。读取页面的
    */
   int ReadPage(void *buffer, uint32_t buffer_size, uint32_t nth_page);
 
