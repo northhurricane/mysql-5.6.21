@@ -33,6 +33,25 @@ cfl_dti2mytime(cfl_dti_t dti, MYSQL_TIME &mtime)
   mtime.time_type = MYSQL_TIMESTAMP_DATETIME;
 }
 
+inline bool
+cfl_field_is_key(Field *field)
+{
+  enum_field_types type = field->type();
+  if (type == MYSQL_TYPE_TIMESTAMP)
+  {
+    return true;
+  }
+  return false;
+}
+
+inline cfl_dti_t
+cfl_row_get_key(uint8_t *key)
+{
+  cfl_dti_t dti;
+  dti = cfl_s2dti(key);
+  return dti;
+}
+
 /*
   return:
   小于0，表示失败
@@ -198,7 +217,9 @@ cfl_row_from_mysql(Field ** fields, uchar *row
   uint8_t *offset = (uint8_t*)row_buf;
   uint32_t buf_size_inner = buf_size;
   int filled_length;
+  bool key_field = false;
 
+  DBUG_ASSERT(key != NULL);
   *key = 1; //用于测试，需要删除
 
   for (Field **field = fields ; *field ; field++)
@@ -216,10 +237,16 @@ cfl_row_from_mysql(Field ** fields, uchar *row
       {
         //to do : 处理错误
       }
+      key_field = cfl_field_is_key(*field);
+      if (key_field)
+      {
+        *key = cfl_row_get_key(offset);
+      }
       offset += filled_length;
       buf_size_inner -= filled_length;
       cfl_row_size += filled_length;
     }
+
   }
   return cfl_row_size;
 }

@@ -370,7 +370,7 @@ int ha_cfl::close(void)
   sql_insert.cc, sql_select.cc, sql_table.cc, sql_udf.cc and sql_update.cc
 */
 
-static cfl_dti_t test_key = 0;
+//static cfl_dti_t test_key = 0; //for test insert buffer key
 
 int ha_cfl::write_row(uchar *buf)
 {
@@ -391,7 +391,6 @@ int ha_cfl::write_row(uchar *buf)
   cfl_row_size = cfl_row_from_mysql(table->field, buf
                                     , cfl_row_buf, sizeof(cfl_row_buf)
                                     , &key_dti);
-  key_dti = test_key++;
   dbug_tmp_restore_column_map(table->read_set, org_bitmap);
   //将cfl的row写入insert buffer
   if (cfl_row_size == 0)

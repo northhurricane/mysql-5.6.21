@@ -24,7 +24,10 @@ cf_create(const char * name)
     return -1;
 
   int fd;
-  fd = open(name, O_RDWR|O_CREAT|O_WRONLY|O_TRUNC);
+  mode_t mode;
+
+  mode = S_IRWXU;
+  fd = open(name, O_RDWR|O_CREAT|O_WRONLY|O_TRUNC, mode);
   if (fd < 0)
     return -1;
   close(fd);
@@ -105,7 +108,7 @@ cf_extend(cf_t *cf, uint64_t size)
   file_size = cf_size(cf);
   if (file_size < 0)
     return -1;
-  if (file_size >= size)
+  if ((uint64_t)file_size >= size)
     return file_size;
   uint8_t buf[1] = {0};
   ssize_t nsize = pwrite(cf->fd, buf, sizeof(buf), size - 1);
