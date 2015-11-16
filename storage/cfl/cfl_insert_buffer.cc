@@ -62,6 +62,8 @@ CflInsertBuffer::Flush(CflPageMaker *maker, CflStorage *storage)
 
   maker->Flush(storage);
 
+  Reset();
+
   return 0;
 }
 
