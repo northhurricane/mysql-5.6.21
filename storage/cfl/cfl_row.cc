@@ -16,6 +16,23 @@ cfl_mytime2dti(const MYSQL_TIME &mtime)
   return cfl_t2i(&cdt);
 }
 
+inline void
+cfl_dti2mytime(cfl_dti_t dti, MYSQL_TIME &mtime)
+{
+  cfl_dt_t dt;
+
+  cfl_i2t(dti, &dt);
+
+  mtime.year = dt.year;
+  mtime.month = dt.month;
+  mtime.day = dt.day;
+  mtime.hour = dt.hour;
+  mtime.minute = dt.minute;
+  mtime.second = dt.second;
+  mtime.second_part = dt.microsecond;
+  mtime.time_type = MYSQL_TIMESTAMP_DATETIME;
+}
+
 /*
   return:
   小于0，表示失败
@@ -66,8 +83,11 @@ cfl_field_from_mysql(Field *field, void *buf, uint32_t buf_size)
       //to do : 错误处理
     }
     cfl_dti_t cdti = cfl_mytime2dti(mtime);
-    //cfl_dt_t cdt;
-    //cfl_i2t(cdti, &cdt);
+    /*{
+    cfl_dt_t cdt;
+    cfl_i2t(cdti, &cdt);
+    printf("stop for debug");
+    }*/
     if (buf_size < CFL_DTI_STORAGE_SIZE)
       return -1;
     cfl_dti2s(cdti, buf);
@@ -93,8 +113,13 @@ cfl_field_from_mysql(Field *field, void *buf, uint32_t buf_size)
   return 0;
 }
 
+/*
+返回值:
+  小于0，出现错误
+  cfl字段（field）的长度
+*/
 inline int
-cfl_field_2_mysql(Field *field)
+cfl_field_2_mysql(Field *field, uint8_t *field_data)
 {
   enum_field_types type = field->type();
   switch (type)
@@ -116,7 +141,7 @@ cfl_field_2_mysql(Field *field)
   case MYSQL_TYPE_LONG:
   {
     int32_t v2 = (int32_t)123;
-    //endian_write_uint32(buf, (uint32_t)v2);
+    v2 = endian_read_uint32(field_data);
     field->store(v2);
     return sizeof(uint32_t);
   }
@@ -130,18 +155,35 @@ cfl_field_2_mysql(Field *field)
   case MYSQL_TYPE_TIMESTAMP:
   {
     MYSQL_TIME mtime;
-    mtime.time_type = MYSQL_TIMESTAMP_DATETIME;
+    cfl_dti_t dti;
+
+    dti = cfl_s2dti(field_data);
+    cfl_dti2mytime(dti, mtime);
+    field->store_time(&mtime);
+    return CFL_DTI_STORAGE_SIZE;
+    
+    /*    mtime.time_type = MYSQL_TIMESTAMP_DATETIME;
     mtime.year = 2015; mtime.month = 11; mtime.day = 6;
     mtime.hour = 14; mtime.minute = 20; mtime.second = 20;
     mtime.second_part = 999;
     field->store_time(&mtime);
-    return CFL_DTI_STORAGE_SIZE;
+    return CFL_DTI_STORAGE_SIZE;*/
   }
   default:
   {
+    //通过字符方式存储
+    uint16_t str_len = endian_read_uint16(field_data);
+    uint8_t *str = field_data + sizeof(uint16_t);
+
+    field->store((const char*)str, str_len
+                 , &my_charset_bin, CHECK_FIELD_IGNORE);
+
+    return str_len + sizeof(uint16_t);
+    /*
     char test[] = "abc";
     field->store(test, 3, &my_charset_bin, CHECK_FIELD_IGNORE);
     return 1;
+    */
   }
   }
   
@@ -186,12 +228,14 @@ int
 cfl_row_to_mysql(Field ** fields, uchar *buf, uchar *row, 
                  uint8_t *cfl_row, uint32_t row_length)
 {
-  uint8_t *cfl_field = NULL;
-  uint32_t cfl_field_length = 0;
+  uint8_t *cfl_field = cfl_row;
+  int field_length = 0;
 
   for (Field **field = fields ; *field ; field++)
   {
-    cfl_field_2_mysql(*field);
+    field_length = cfl_field_2_mysql(*field, cfl_field);
+    //下一个字段（field）
+    cfl_field += field_length;
   }
 
   return 0;

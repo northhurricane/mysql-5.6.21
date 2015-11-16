@@ -27,6 +27,8 @@ int
 CflPageMaker::Destroy(CflPageMaker *maker)
 {
   DBUG_ASSERT(maker != NULL);
+  DBUG_ASSERT(maker->buffer_ != NULL);
+  free(maker->buffer_);
   delete maker;
   return 0;
 }
@@ -39,6 +41,7 @@ CflPageMaker::AddRow(void *row, uint16_t row_size)
   cfl_page_write_row_offset(pos_offset_, row_pos_);
 
   rows_counter_++;
+  row_pos_ += row_size;
   row_offset_ += row_size;
   pos_offset_ -= CFL_PAGE_ROW_POS_SIZE;
   DBUG_ASSERT(row_offset_ <= pos_offset_);
@@ -47,11 +50,17 @@ CflPageMaker::AddRow(void *row, uint16_t row_size)
 void
 CflPageMaker::Flush(CflStorage *storage)
 {
+  //flush表示数据完成填写，进行行数据的上一级（up level）综合信息的填写
+  cfl_page_write_row_count(buffer_, rows_counter_);
+  //在当前的row_offset_写入row_pos_，确保通过row_pos_的计算得到行长度。
+  cfl_page_write_row_offset(pos_offset_, row_pos_);
   //写入存储对象
   storage->WritePage(buffer_, rows_counter_, page_index_);
 
   Reset();
 }
+
+
 
 
 /********************CflPageManager**********************/

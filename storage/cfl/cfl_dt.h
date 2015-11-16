@@ -44,7 +44,7 @@ year|month|day|hour|minute|second|microsecond
 #define YEAR_MASK (0xFFFF)
 #define MONTH_MASK (0xF)
 #define DAY_MASK (0x1F)
-#define HUOR_MASK (0x1F)
+#define HOUR_MASK (0x1F)
 #define MINUTE_MASK (0x3F)
 #define SECOND_MASK (0x3F)
 #define MICROSECOND_MASK (0xFFFFF)
@@ -91,7 +91,7 @@ inline int cfl_i2t(cfl_dti_t v, cfl_dt_t *dt)
   temp = temp >> SECOND_BITS;
   dt->minute = (int8_t)(temp & MINUTE_MASK);
   temp = temp >> MINUTE_BITS;
-  dt->hour = temp & HOUR_BITS;
+  dt->hour = (int8_t)(temp & HOUR_MASK);
   temp = temp >> HOUR_BITS;
   dt->day = (int8_t)(temp & DAY_MASK);
   temp = temp >> DAY_BITS;

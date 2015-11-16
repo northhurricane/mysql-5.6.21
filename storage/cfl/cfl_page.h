@@ -24,6 +24,11 @@ page magic tail
 页头格式
 row count:页面内记录数量
 */
+/*
+rows index
+  用于存储页面内行的位置。与行的写入顺序相反，index的写入时从页尾向页头写，
+  为了便于计算行的长度，最后一个index写入的是一个虚拟的行偏移，也就是最后一行的结尾
+*/
 
 #define CFL_PAGE_SIZE (1024 * 1024)
 
@@ -33,8 +38,8 @@ row count:页面内记录数量
 
 #define CFL_PAGE_ROW_POS_SIZE (3)
 
-#define CFL_PAGE_MAGIC_HEAD (OxAC81FD7321CA92FB)
-#define CFL_PAGE_MAGIC_TAIL (0xC725ADFE6420CB63)
+#define CFL_PAGE_MAGIC_HEAD (0XAC81FD7321CA92FB)
+#define CFL_PAGE_MAGIC_TAIL (0XC725ADFE6420CB63)
 
 #define CFL_PAGE_MAGIC_HEAD_SIZE (8)
 #define CFL_PAGE_MAGIC_TAIL_SIZE (8)
@@ -116,6 +121,7 @@ private :
   uint8_t *pos_offset_; //位置偏移
   cfl_dti_t page_index_;
 
+  //重置状态
   void Reset()
   {
     rows_counter_ = 0;
@@ -123,16 +129,19 @@ private :
     row_offset_ = buffer_ + CFL_PAGE_MAGIC_HEAD_SIZE + CFL_PAGE_HEAD_SIZE;
     pos_offset_ = (buffer_ + CFL_PAGE_SIZE) - CFL_PAGE_MAGIC_TAIL_SIZE
                                             - CFL_PAGE_ROW_POS_SIZE;
+    //magic head/tail填写
+    uint64_t magic = CFL_PAGE_MAGIC_HEAD;
+    endian_write_uint64(buffer_, magic);
+    magic = CFL_PAGE_MAGIC_TAIL;
+    endian_write_uint64((buffer_ + CFL_PAGE_SIZE) - CFL_PAGE_MAGIC_TAIL_SIZE
+                        , magic);
   }
 
   CflPageMaker() {
     buffer_ = NULL;
-    Reset();
   }
 
   ~CflPageMaker() {
-    if (buffer_ != NULL)
-      free(buffer_);
   }
 
 };
