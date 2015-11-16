@@ -51,9 +51,9 @@ public :
    */
   int Flush(CflPageMaker *maker, CflStorage *storage);
   /*
-    获取缓存中row的个数
+    获取缓存中真正row的个数
    */
-  uint32_t GetRowsCount() { return sorted_eles_.size(); }
+  uint32_t GetRowsCount() { return sorted_eles_.size() - 2; }
   uint32_t GetRowsSize() { return offset_; }
 
 private :

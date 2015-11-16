@@ -52,9 +52,9 @@ CflInsertBuffer::Insert(cfl_dti_t key, void *row, uint16_t row_size)
 int
 CflInsertBuffer::Flush(CflPageMaker *maker, CflStorage *storage)
 {
-  uint32_t max_row = sorted_eles_.size() - 1;
+  uint32_t max_row = sorted_eles_.size() - 2; //去掉2个伪记录
 
-  for (uint32_t i = 1; i < max_row; i++)
+  for (uint32_t i = 1; i <= max_row; i++)
   {
     maker->AddRow(buffer_ + sorted_eles_[i].row_pos
                     , sorted_eles_[i].row_size);

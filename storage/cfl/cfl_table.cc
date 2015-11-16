@@ -151,14 +151,14 @@ CflTable::PageOverflow(uint16_t row_size)
   //计算当前行是否导致存储内容超过cfl的page容量
   //计算行数所占中间
   uint32_t total_rows_size = row_size + insert_buffer_->GetRowsSize();
-  //页面内索引所占空间
+  //页面内索引所占空间。由于page的设计原因，包括当前行的index entry，还要增价一个index entry的空间。参考cfl_page.cc
   uint32_t index_size = 
-  (insert_buffer_->GetRowsCount() + 1) * CFL_PAGE_ROW_POS_SIZE;
+  (insert_buffer_->GetRowsCount() + 2) * CFL_PAGE_ROW_POS_SIZE;
   //计算占用的所有空间
   uint32_t total_size = CFL_PAGE_FIX_SPACE_SIZE + total_rows_size + index_size;
 
   //测试用
-  if (total_size > 100)
+  if (total_size > 80)
     return true;
 
   if (total_size > CFL_PAGE_SIZE)

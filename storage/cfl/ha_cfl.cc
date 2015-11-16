@@ -1100,11 +1100,11 @@ int
 ha_cfl::fetch_next(bool &over)
 {
   //用于测试，可删除
-  if (cfl_cursor_counter_get(cursor_) == 1)
+  /*if (cfl_cursor_counter_get(cursor_) == 1)
   {
     over = true;
     return 0;
-  }
+    }*/
 
   cfl_cursor_counter_inc(cursor_);
   /*
