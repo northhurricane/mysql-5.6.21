@@ -82,6 +82,7 @@ CflData::WritePage(void *page, uint32_t page_size)
   int r = cf_write(&cf_file_, offset, page, CFL_PAGE_SIZE);
   if (r < 0)
     return -1;
+  curr_page_no_++;
 
   return 0;
 }
