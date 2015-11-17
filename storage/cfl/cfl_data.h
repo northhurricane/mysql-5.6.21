@@ -25,6 +25,10 @@ public :
     读取指定页面
     参数
       nth_page:0-based。读取页面的
+    返回值
+      0    :未读取到任何数据
+      大于0:读取数据的长度
+      -1   :读取错误
    */
   int ReadPage(void *buffer, uint32_t buffer_size, uint32_t nth_page);
 

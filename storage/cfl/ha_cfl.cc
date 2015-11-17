@@ -1191,8 +1191,10 @@ ha_cfl::next(bool &over)
       2-1、下一页存在。如果记录页存在，其中必有记录，next一定会获得一条记录
       2-2、下一页不存在。说明已经完成所有记录的next，设置cursor状态为CFL_CURSOR_AFTER_END
   */
-  bool row_in_current_page = true;
-  if (row_in_current_page)
+  DBUG_ASSERT(page != NULL);
+  void *buffer = page->page();
+  uint32_t row_count = cfl_page_read_row_count(buffer);
+  if (row_no < row_count)
   {
     //获取行
     cfl_cursor_row_no_set(cursor_, row_no);    

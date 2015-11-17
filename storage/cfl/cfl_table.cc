@@ -17,8 +17,7 @@ CflStorage::WritePage(void *page, uint32_t rows_count, cfl_dti_t dti)
 int
 CflStorage::ReadPage(void *buffer, uint32_t buffer_size, uint32_t nth_page)
 {
-  data_->ReadPage(buffer, buffer_size, nth_page);
-  return 0;
+  return data_->ReadPage(buffer, buffer_size, nth_page);
 }
 
 int

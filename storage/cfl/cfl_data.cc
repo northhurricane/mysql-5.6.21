@@ -90,6 +90,8 @@ int
 CflData::ReadPage(void *buffer, uint32_t buffer_size, uint32_t nth_page)
 {
   uint64_t offset = 0;
+  if (nth_page >= curr_page_no_)
+    return 0;
 
   DBUG_ASSERT(buffer_size == CFL_PAGE_SIZE);
   offset = nth_page * CFL_PAGE_SIZE;
@@ -97,5 +99,5 @@ CflData::ReadPage(void *buffer, uint32_t buffer_size, uint32_t nth_page)
   if (r < 0)
     return -1;
 
-  return 0;
+  return 1;
 }
