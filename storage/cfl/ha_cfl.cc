@@ -1100,13 +1100,12 @@ int
 ha_cfl::fetch_next(bool &over)
 {
   //用于测试，可删除
-  /*if (cfl_cursor_counter_get(cursor_) == 1)
+  /*if (cfl_cursor_position_get(cursor_) == 1)
   {
     over = true;
     return 0;
     }*/
 
-  cfl_cursor_counter_inc(cursor_);
   /*
     首先定位下一条记录，然后获取记录相关
   */
@@ -1164,6 +1163,7 @@ ha_cfl::next(bool &over)
       return 0;
     }
     cfl_cursor_page_set(cursor_, page);
+    cfl_cursor_position_set(cursor_, 1);
   }
   else if (cfl_cursor_position_get(cursor_) == CFL_CURSOR_AFTER_END)
   {
@@ -1179,6 +1179,9 @@ ha_cfl::next(bool &over)
     page = cfl_cursor_page_get(cursor_);
     row_no = cfl_cursor_row_no_get(cursor_);
     row_no++;
+    uint64_t curpos = cfl_cursor_position_get(cursor_);
+    curpos++;
+    cfl_cursor_position_set(cursor_, curpos);
   }
 
   /*

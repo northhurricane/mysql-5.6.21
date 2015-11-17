@@ -14,7 +14,7 @@ index node:
 */
 /*
 index head的结构
-index node number:32bit，用于记录当前index node的个数
+index node number:32bit，用于记录当前index node的个数。也就是数据文件中的有效页面数
 */
 /*
 index node:64bit，对应的数据页的最小时间节点
@@ -51,6 +51,11 @@ public :
     endian_write_uint32(node_count_pos, node_count);
   }
   int AddPage(cfl_dti_t dti);
+
+  uint32_t ReadIndexNodeNumber()
+  {
+    return endian_read_uint32(buffer_ + CFL_INDEX_NODE_COUNT);
+  }
 
 private :
   /*

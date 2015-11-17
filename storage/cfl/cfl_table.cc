@@ -65,7 +65,8 @@ int
 CflStorage::Initialize(const char *name)
 {
   index_ = CflIndex::Create(name);
-  data_ = CflData::Create(name);
+  uint32_t index_node_number = index_->ReadIndexNodeNumber();
+  data_ = CflData::Create(name, index_node_number);
 
   return 0;
 

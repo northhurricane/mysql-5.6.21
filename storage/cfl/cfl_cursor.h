@@ -16,8 +16,6 @@ struct cfl_cursor_struct
   uint32_t row_no; //0-based.当前页的当前record
   uint8_t  *row;   //fetch的record在内存页中的位置
   uint16_t row_length; //行长度
-
-  uint64_t counter;   //记录操作次数
 };
 typedef cfl_cursor_struct cfl_cursor_t;
 
@@ -29,18 +27,6 @@ void cfl_cursor_init(cfl_cursor_t &cursor)
   cursor.page = NULL;
   cursor.row_no = 0;
   cursor.row = NULL;
-
-  cursor.counter = 0;
-}
-
-inline uint64_t cfl_cursor_counter_get(cfl_cursor_t &cursor)
-{
-  return cursor.counter;
-}
-
-inline uint64_t cfl_cursor_counter_inc(cfl_cursor_t &cursor)
-{
-  return cursor.counter++;
 }
 
 inline uint64_t cfl_cursor_position_get(cfl_cursor_t &cursor)

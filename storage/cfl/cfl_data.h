@@ -10,13 +10,14 @@
 /*
 数据存储对象
 数据部分只保存数据页，编号从0开始，0表示第一个数据页
+有效的数据页不记录在data file中，有效的数据页通过Create函数通过参数传入
 */
 class CflData
 {
 public :
   static int CreateDataStorage(const char *name);
   static int DestroyDataStorage(const char *name);
-  static CflData *Create(const char *name);
+  static CflData *Create(const char *name, uint32_t page_no);
   static int Destroy(CflData *data);
 
   int WritePage(void *page, uint32_t page_size);

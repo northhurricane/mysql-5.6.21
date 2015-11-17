@@ -43,7 +43,7 @@ CflData::DestroyDataStorage(const char *name)
 }
 
 CflData*
-CflData::Create(const char *name)
+CflData::Create(const char *name, uint32_t page_no)
 {
   char data_file_name[256];
 
@@ -56,6 +56,7 @@ CflData::Create(const char *name)
 
   CflData *data = new CflData();
   data->cf_file_ = cf_file;
+  data->curr_page_no_ = page_no;
 
   return data;
 }
