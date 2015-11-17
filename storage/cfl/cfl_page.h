@@ -109,9 +109,7 @@ public :
   static int Destroy(CflPageMaker *maker);
 
   void AddRow(void *row, uint16_t row_size);
-  void set_page_index(cfl_dti_t dti) { page_index_ = dti; }
-  cfl_dti_t page_index() { return page_index_; }
-  void Flush(CflStorage *storage);
+  void Flush(CflStorage *storage, cfl_dti_t key);
 
 private :
   uint32_t rows_counter_;
@@ -119,7 +117,6 @@ private :
   uint32_t row_pos_; //行在页面内的偏移
   uint8_t *row_offset_; //写入行偏移
   uint8_t *pos_offset_; //位置偏移
-  cfl_dti_t page_index_;
 
   //重置状态
   void Reset()
