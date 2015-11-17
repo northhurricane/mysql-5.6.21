@@ -26,7 +26,7 @@ cf_create(const char * name)
   int fd;
   mode_t mode;
 
-  mode = S_IRWXU;
+  mode = S_IRUSR | S_IXUSR;
   fd = open(name, O_RDWR|O_CREAT|O_WRONLY|O_TRUNC, mode);
   if (fd < 0)
     return -1;
