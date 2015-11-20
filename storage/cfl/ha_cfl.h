@@ -41,6 +41,10 @@
 #include <stdint.h>
 #include "cfl_cursor.h"
 
+#define CFL_MAX_COLUMN_IN_KEY_DEFINATION (1)
+#define CFL_MAX_INDEX_IN_TABLE_DEFINATION (1)
+#define CFL_MAX_KEY_LENGTH (20)
+
 class CflTable;
 
 /** @brief
@@ -135,7 +139,8 @@ public:
     There is no need to implement ..._key_... methods if your engine doesn't
     support indexes.
    */
-  uint max_supported_keys()          const { return 0; }
+  uint max_supported_keys() const
+  { return CFL_MAX_INDEX_IN_TABLE_DEFINATION; }
 
   /** @brief
     unireg.cc will call this to make sure that the storage engine can handle
@@ -146,7 +151,8 @@ public:
     There is no need to implement ..._key_... methods if your engine doesn't
     support indexes.
    */
-  uint max_supported_key_parts()     const { return 0; }
+  uint max_supported_key_parts() const
+  {return CFL_MAX_COLUMN_IN_KEY_DEFINATION; }
 
   /** @brief
     unireg.cc will call this to make sure that the storage engine can handle
@@ -157,7 +163,8 @@ public:
     There is no need to implement ..._key_... methods if your engine doesn't
     support indexes.
    */
-  uint max_supported_key_length()    const { return 0; }
+  uint max_supported_key_length() const
+  { return CFL_MAX_KEY_LENGTH; }
 
   /** @brief
     Called in test_quick_select to determine if indexes should be used.
@@ -262,7 +269,6 @@ public:
 
   THR_LOCK_DATA **store_lock(THD *thd, THR_LOCK_DATA **to,
                              enum thr_lock_type lock_type);     ///< required
-
 private :
   CflTable *cfl_table_;
   cfl_cursor_t cursor_;
@@ -279,7 +285,7 @@ private :
   */
   int next(bool &over);
   /*
-    取得页面内行的指针.
+    取得页面内行的指针。
   */
   int fetch();
 };

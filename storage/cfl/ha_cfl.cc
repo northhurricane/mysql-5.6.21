@@ -83,6 +83,79 @@ static handler *cfl_create_handler(handlerton *hton,
                                    TABLE_SHARE *table, 
                                    MEM_ROOT *mem_root);
 
+#define CFL_INDEX_TIMESTAMP_NAME "key_timestamp"
+
+static int
+cfl_check_create_info(TABLE *table_arg, HA_CREATE_INFO *create_info)
+{
+  //进行列检查
+  Field *rfield;
+  bool has_key_column = false;
+  for (Field **field= table_arg->s->field; *field; field++)
+  {
+    rfield = *field;
+
+    //必须存在一个用于
+    enum_field_types type = rfield->type();
+    if (MYSQL_TYPE_TIMESTAMP == type)
+    {
+      if (strcmp(rfield->field_name, CFL_INDEX_TIMESTAMP_NAME) == 0)
+      {
+        has_key_column = true;
+      }
+    }
+    //现阶段不允许存在null的列
+    if (rfield->real_maybe_null())
+    {
+      my_error(ER_CHECK_NOT_IMPLEMENTED, MYF(0), "nullable columns");
+      return (HA_ERR_UNSUPPORTED);
+    }
+  }
+
+  if (!has_key_column)
+  {
+    my_error(ER_CHECK_NOT_IMPLEMENTED, MYF(0)
+             , " that none timestamp(6) field is defined in create table");
+    return (HA_ERR_UNSUPPORTED);
+  }
+
+  //如果带有index的信息，进行index信息的查询
+  if (table_arg->s->keys > 1)
+  {
+    my_error(ER_CHECK_NOT_IMPLEMENTED, MYF(0)
+             , " more than one index defined.");
+    return (HA_ERR_UNSUPPORTED);
+  }
+
+  if (table_arg->s->keys == 1)
+  {
+    KEY *index = table_arg->s->key_info;
+    if (index->actual_key_parts != 1)
+    {
+      my_error(ER_CHECK_NOT_IMPLEMENTED, MYF(0)
+               , " more than 1 key in index");
+      return (HA_ERR_UNSUPPORTED);
+    }
+
+    if (index->actual_key_parts != index->usable_key_parts)
+    {
+      my_error(ER_CHECK_NOT_IMPLEMENTED, MYF(0)
+               , " wrong key defination.");
+      return (HA_ERR_UNSUPPORTED);
+    }
+
+    if (strcmp(index->key_part[0].field->field_name
+               , CFL_INDEX_TIMESTAMP_NAME) != 0)
+    {
+      my_error(ER_CHECK_NOT_IMPLEMENTED, MYF(0)
+               , " key not on key_timestamp field");
+      return (HA_ERR_UNSUPPORTED);
+    }
+  }
+
+  return 0;
+}
+
 handlerton *cfl_ton;
 
 /* Interface to mysqld, to check system tables supported by SE */
@@ -977,7 +1050,13 @@ int ha_cfl::create(const char *name, TABLE *table_arg,
 {
   DBUG_ENTER("ha_cfl::create");
 
-  int r = CflTable::CreateStorage(name);
+  int r = cfl_check_create_info(table_arg, create_info);
+  if (r != 0)
+  {
+    DBUG_RETURN(r);
+  }
+
+  r = CflTable::CreateStorage(name);
   if (r < 0)
   {
   }

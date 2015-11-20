@@ -45,7 +45,9 @@ CflStorage::Open(const char *name)
 
   storage = new CflStorage();
 
-  storage->Initialize(name);
+  int r = storage->Initialize(name);
+  if (r < 0)
+    return NULL;
 
   return storage;
 }
@@ -64,8 +66,13 @@ int
 CflStorage::Initialize(const char *name)
 {
   index_ = CflIndex::Create(name);
+  if (index_ == NULL)
+    return -1;
+
   uint32_t index_node_number = index_->ReadIndexNodeNumber();
   data_ = CflData::Create(name, index_node_number);
+  if (data_ == NULL)
+    return -1;
 
   return 0;
 
