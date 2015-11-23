@@ -84,6 +84,7 @@ static handler *cfl_create_handler(handlerton *hton,
                                    MEM_ROOT *mem_root);
 
 #define CFL_INDEX_TIMESTAMP_NAME "key_timestamp"
+#define CFL_INDEX_TIMESTAMP_SCALE 6
 
 static int
 cfl_check_create_info(TABLE *table_arg, HA_CREATE_INFO *create_info)
@@ -99,9 +100,13 @@ cfl_check_create_info(TABLE *table_arg, HA_CREATE_INFO *create_info)
     enum_field_types type = rfield->type();
     if (MYSQL_TYPE_TIMESTAMP == type)
     {
+      uint scale = rfield->decimals();
       if (strcmp(rfield->field_name, CFL_INDEX_TIMESTAMP_NAME) == 0)
       {
-        has_key_column = true;
+        if (scale == CFL_INDEX_TIMESTAMP_SCALE)
+        {
+          has_key_column = true;
+        }
       }
     }
     //现阶段不允许存在null的列
