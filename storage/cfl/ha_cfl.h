@@ -79,7 +79,7 @@ public:
   /** @brief
     The name that will be used for display purposes.
    */
-  const char *table_type() const { return "EXAMPLE"; }
+  const char *table_type() const { return "CFL"; }
 
   /** @brief
     The name of the index type that will be used for display.
