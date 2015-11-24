@@ -85,7 +85,7 @@ public:
     The name of the index type that will be used for display.
     Don't implement this method unless you really have indexes.
    */
-  const char *index_type(uint inx) { return "HASH"; }
+  const char *index_type(uint inx) { return "UNKNOWN"; }
 
   /** @brief
     The file extensions.
@@ -118,7 +118,10 @@ public:
   */
   ulong index_flags(uint inx, uint part, bool all_parts) const
   {
-    return 0;
+    return (HA_READ_NEXT | HA_READ_PREV | HA_READ_ORDER
+            | HA_READ_RANGE | HA_KEYREAD_ONLY
+            | HA_DO_INDEX_COND_PUSHDOWN);
+    //    return 0;
   }
 
   /** @brief
@@ -219,6 +222,16 @@ public:
                      key_part_map keypart_map, enum ha_rkey_function find_flag);
 
   /** @brief
+      使用索引查询的初始化动作在此
+  */
+  int index_init(uint index, bool sorted);
+
+  /** @brief
+      完成索引查询后的结束动作在此
+  */
+  int index_end();
+
+  /** @brief
     We implement this in ha_cfl.cc. It's not an obligatory method;
     skip it and and MySQL will treat it as not implemented.
   */
@@ -288,6 +301,10 @@ private :
     取得页面内行的指针。
   */
   int fetch();
+  /*
+    进行table的统计信息构造
+  */
+  void statistic();
 };
 
 

@@ -819,6 +819,7 @@ int ha_cfl::rnd_pos(uchar *buf, uchar *pos)
 int ha_cfl::info(uint flag)
 {
   DBUG_ENTER("ha_cfl::info");
+  statistic();
   DBUG_RETURN(0);
 }
 
@@ -1027,7 +1028,7 @@ ha_rows ha_cfl::records_in_range(uint inx, key_range *min_key,
                                      key_range *max_key)
 {
   DBUG_ENTER("ha_cfl::records_in_range");
-  DBUG_RETURN(10);                         // low number to force index usage
+  DBUG_RETURN(1);
 }
 
 
@@ -1341,5 +1342,49 @@ ha_cfl::fetch()
   cfl_cursor_row_length_set(cursor_, offset_next - offset);
 
   return 0;
+}
+
+int
+ha_cfl::index_init(uint idx, bool sorted)
+{
+  return 0;
+}
+
+int
+ha_cfl::index_end()
+{
+  return 0;
+}
+
+void
+ha_cfl::statistic()
+{
+  //全部信息为测试信息
+  stats.records = 100;
+  stats.deleted = 0;
+  stats.mean_rec_length = 20;
+  stats.create_time = 0;
+  stats.check_time = 0;
+  stats.update_time = 0;
+  stats.block_size = 0;
+  //
+  stats.data_file_length = 10000000;
+  stats.index_file_length = 10000000;
+
+  //仿照
+  stats.data_file_length = 327680;
+  stats.max_data_file_length = 0;
+  stats.index_file_length = 163840;
+  stats.max_index_file_length = (ulonglong)10344644715844964239;
+  stats.delete_length = 0;
+  stats.auto_increment_value = 0;
+  stats.records = 8192;
+  stats.deleted = 0;
+  stats.mean_rec_length = 40;
+  stats.create_time = 0;
+  stats.check_time = 0;
+  stats.update_time = 0;
+  stats.block_size = 16384;
+  stats.mrr_length_per_rec = 14;
 }
 
