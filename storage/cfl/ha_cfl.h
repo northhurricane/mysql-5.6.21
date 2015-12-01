@@ -63,6 +63,12 @@ public:
   }
 };
 
+struct cfl_index_search_struct
+{
+  //  cfl_dti_t key;
+};
+typedef struct cfl_index_search_struct cfl_index_search_t;
+
 /** @brief
   Class definition for the storage engine
 */
@@ -118,6 +124,10 @@ public:
   */
   ulong index_flags(uint inx, uint part, bool all_parts) const
   {
+    //不应该出现该情况
+    if (table_share->key_info[inx].algorithm == HA_KEY_ALG_FULLTEXT)
+      return 0;
+
     return (HA_READ_NEXT | HA_READ_PREV | HA_READ_ORDER
             | HA_READ_RANGE | HA_KEYREAD_ONLY
             | HA_DO_INDEX_COND_PUSHDOWN);
@@ -218,28 +228,31 @@ public:
     We implement this in ha_cfl.cc. It's not an obligatory method;
     skip it and and MySQL will treat it as not implemented.
   */
-  int index_read_map(uchar *buf, const uchar *key,
-                     key_part_map keypart_map, enum ha_rkey_function find_flag);
+  /*int index_read_map(uchar *buf, const uchar *key,
+    key_part_map keypart_map, enum ha_rkey_function find_flag);*/
 
+  /*索引查询*/
   /** @brief
       使用索引查询的初始化动作在此
+      参数：
+        index:索引查询所使用的索引编号
   */
   int index_init(uint index, bool sorted);
-
   /** @brief
       完成索引查询后的结束动作在此
   */
   int index_end();
-
   /** @brief
-    We implement this in ha_cfl.cc. It's not an obligatory method;
-    skip it and and MySQL will treat it as not implemented.
+      进行索引的读取
+  */
+  int index_read(uchar * buf, const uchar * key, uint key_len,
+                 enum ha_rkey_function find_flag);
+  /** @brief
+      Used to read forward through the index.
   */
   int index_next(uchar *buf);
-
   /** @brief
-    We implement this in ha_cfl.cc. It's not an obligatory method;
-    skip it and and MySQL will treat it as not implemented.
+      Used to read backwards through the index.
   */
   int index_prev(uchar *buf);
 

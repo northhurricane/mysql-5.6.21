@@ -546,10 +546,11 @@ int ha_cfl::delete_row(const uchar *buf)
   index.
 */
 
-int ha_cfl::index_read_map(uchar *buf, const uchar *key,
-                               key_part_map keypart_map __attribute__((unused)),
-                               enum ha_rkey_function find_flag
-                               __attribute__((unused)))
+/*int ha_cfl::index_read_map(
+  uchar *buf, const uchar *key,
+  key_part_map keypart_map __attribute__((unused)),
+  enum ha_rkey_function find_flag
+  __attribute__((unused)))
 {
   int rc;
   DBUG_ENTER("ha_cfl::index_read");
@@ -558,80 +559,7 @@ int ha_cfl::index_read_map(uchar *buf, const uchar *key,
   MYSQL_INDEX_READ_ROW_DONE(rc);
   DBUG_RETURN(rc);
 }
-
-
-/**
-  @brief
-  Used to read forward through the index.
 */
-
-int ha_cfl::index_next(uchar *buf)
-{
-  int rc;
-  DBUG_ENTER("ha_cfl::index_next");
-  MYSQL_INDEX_READ_ROW_START(table_share->db.str, table_share->table_name.str);
-  rc= HA_ERR_WRONG_COMMAND;
-  MYSQL_INDEX_READ_ROW_DONE(rc);
-  DBUG_RETURN(rc);
-}
-
-
-/**
-  @brief
-  Used to read backwards through the index.
-*/
-
-int ha_cfl::index_prev(uchar *buf)
-{
-  int rc;
-  DBUG_ENTER("ha_cfl::index_prev");
-  MYSQL_INDEX_READ_ROW_START(table_share->db.str, table_share->table_name.str);
-  rc= HA_ERR_WRONG_COMMAND;
-  MYSQL_INDEX_READ_ROW_DONE(rc);
-  DBUG_RETURN(rc);
-}
-
-
-/**
-  @brief
-  index_first() asks for the first key in the index.
-
-  @details
-  Called from opt_range.cc, opt_sum.cc, sql_handler.cc, and sql_select.cc.
-
-  @see
-  opt_range.cc, opt_sum.cc, sql_handler.cc and sql_select.cc
-*/
-int ha_cfl::index_first(uchar *buf)
-{
-  int rc;
-  DBUG_ENTER("ha_cfl::index_first");
-  MYSQL_INDEX_READ_ROW_START(table_share->db.str, table_share->table_name.str);
-  rc= HA_ERR_WRONG_COMMAND;
-  MYSQL_INDEX_READ_ROW_DONE(rc);
-  DBUG_RETURN(rc);
-}
-
-
-/**
-  @brief
-  index_last() asks for the last key in the index.
-
-  @details
-  Called from opt_range.cc, opt_sum.cc, sql_handler.cc, and sql_select.cc.
-
-  @see
-  opt_range.cc, opt_sum.cc, sql_handler.cc and sql_select.cc
-*/
-int ha_cfl::index_last(uchar *buf)
-{
-  int rc;
-  DBUG_ENTER("ha_cfl::index_last");
-  MYSQL_INDEX_READ_ROW_START(table_share->db.str, table_share->table_name.str);
-  rc= HA_ERR_WRONG_COMMAND;
-  MYSQL_INDEX_READ_ROW_DONE(rc);
-  DBUG_RETURN(rc);
-}
 
 
 /**
@@ -1347,13 +1275,99 @@ ha_cfl::fetch()
 int
 ha_cfl::index_init(uint idx, bool sorted)
 {
-  return 0;
+  DBUG_ENTER("ha_cfl::index_init");
+  active_index= idx;
+  DBUG_RETURN(0);
 }
 
 int
 ha_cfl::index_end()
 {
-  return 0;
+  DBUG_ENTER("ha_cfl::index_end");
+  DBUG_RETURN(0);
+}
+
+int
+ha_cfl::index_read(uchar * buf, const uchar * key, uint key_len,
+                   enum ha_rkey_function find_flag)
+{
+  DBUG_ENTER("ha_cfl::index_read");
+  DBUG_RETURN(0);
+}
+
+int
+ha_cfl::index_next(uchar *buf)
+{
+  int rc = 0;
+  DBUG_ENTER("ha_cfl::index_next");
+  //MYSQL_INDEX_READ_ROW_START(table_share->db.str, table_share->table_name.str);
+  bool over = true;
+  if (over)
+  {
+    //没有更多的数据
+    rc= HA_ERR_END_OF_FILE;
+    //更新cfl_rnd的
+    MYSQL_READ_ROW_DONE(rc);
+    DBUG_RETURN(rc);
+  }
+
+  DBUG_RETURN(rc);
+}
+
+/**
+  @brief
+*/
+
+int ha_cfl::index_prev(uchar *buf)
+{
+  int rc;
+  DBUG_ENTER("ha_cfl::index_prev");
+  MYSQL_INDEX_READ_ROW_START(table_share->db.str, table_share->table_name.str);
+  rc= HA_ERR_WRONG_COMMAND;
+  MYSQL_INDEX_READ_ROW_DONE(rc);
+  DBUG_RETURN(rc);
+}
+
+
+/**
+  @brief
+  index_first() asks for the first key in the index.
+
+  @details
+  Called from opt_range.cc, opt_sum.cc, sql_handler.cc, and sql_select.cc.
+
+  @see
+  opt_range.cc, opt_sum.cc, sql_handler.cc and sql_select.cc
+*/
+int ha_cfl::index_first(uchar *buf)
+{
+  int rc;
+  DBUG_ENTER("ha_cfl::index_first");
+  MYSQL_INDEX_READ_ROW_START(table_share->db.str, table_share->table_name.str);
+  rc= HA_ERR_WRONG_COMMAND;
+  MYSQL_INDEX_READ_ROW_DONE(rc);
+  DBUG_RETURN(rc);
+}
+
+
+/**
+  @brief
+  index_last() asks for the last key in the index.
+
+  @details
+  Called from opt_range.cc, opt_sum.cc, sql_handler.cc, and sql_select.cc.
+
+  @see
+  opt_range.cc, opt_sum.cc, sql_handler.cc and sql_select.cc
+*/
+int ha_cfl::index_last(uchar *buf)
+{
+  int rc;
+  DBUG_ENTER("ha_cfl::index_last");
+  MYSQL_INDEX_READ_ROW_START(table_share->db.str, table_share->table_name.str);
+  rc= HA_ERR_WRONG_COMMAND;
+  MYSQL_INDEX_READ_ROW_DONE(rc);
+  DBUG_RETURN(rc);
 }
 
 void
@@ -1378,7 +1392,7 @@ ha_cfl::statistic()
   stats.max_index_file_length = (ulonglong)10344644715844964239;
   stats.delete_length = 0;
   stats.auto_increment_value = 0;
-  stats.records = 8192;
+  stats.records = 100;
   stats.deleted = 0;
   stats.mean_rec_length = 40;
   stats.create_time = 0;
