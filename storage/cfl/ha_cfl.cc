@@ -1276,7 +1276,10 @@ int
 ha_cfl::index_init(uint idx, bool sorted)
 {
   DBUG_ENTER("ha_cfl::index_init");
+
+  DBUG_ASSERT(idx == 0);
   active_index= idx;
+
   DBUG_RETURN(0);
 }
 
@@ -1292,7 +1295,42 @@ ha_cfl::index_read(uchar * buf, const uchar * key, uint key_len,
                    enum ha_rkey_function find_flag)
 {
   DBUG_ENTER("ha_cfl::index_read");
-  DBUG_RETURN(0);
+  my_bitmap_map *old_map;
+  int rc = 0;
+
+  DBUG_ASSERT(table->key_info != NULL);
+  KEY *index = table->key_info + active_index;
+
+  //longlong dtpack = my_datetime_packed_from_binary(key, 6);
+  //MYSQL_TIME ltime;
+  //TIME_from_longlong_datetime_packed(&ltime, dtpack);
+  struct timeval tv;
+  cfl_dt_t cdt;
+  my_timestamp_from_binary(&tv, key, 6);
+  cfl_tv2cdt(cdt, tv);
+  cfl_dti_t dti;
+  dti = cfl_t2i(&cdt);
+
+  old_map= dbug_tmp_use_all_columns(table, table->write_set);
+
+  switch (find_flag)
+  {
+  case HA_READ_KEY_EXACT:
+  {
+    break;
+  }
+  case HA_READ_AFTER_KEY:
+  {
+    break;
+  }
+  default:
+  {
+    DBUG_ASSERT(false);
+  }
+  }
+
+  dbug_tmp_restore_column_map(table->write_set, old_map);
+  DBUG_RETURN(rc);
 }
 
 int

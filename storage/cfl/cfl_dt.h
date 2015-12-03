@@ -2,6 +2,7 @@
 #define _CFL_DT_H_
 
 #include <stdint.h>
+#include <time.h>
 #include "cfl_endian.h"
 
 /*
@@ -131,6 +132,29 @@ inline bool cfl_dt_valid(const cfl_dt_t *dt)
     return false;
 
   return true;
+}
+
+#define TM_BASE_YEAR (1900)
+#define TM_BASE_MONTH (1)
+#define TM_BASE_DAY (1)
+inline void cfl_tm2cdt(cfl_dt_t &cdt, struct tm *dt)
+{
+  cdt.year = TM_BASE_YEAR + dt->tm_year;
+  cdt.month = TM_BASE_MONTH + dt->tm_mon;
+  cdt.day = TM_BASE_DAY + dt->tm_mday;
+  cdt.hour = dt->tm_hour;
+  cdt.minute = dt->tm_min;
+  cdt.second = dt->tm_sec;
+}
+
+inline void cfl_tv2cdt(cfl_dt_t &cdt, const struct timeval &tv)
+{
+  time_t time;
+  struct tm *tm;
+  time = tv.tv_sec;
+  tm = localtime(&time);
+  cfl_tm2cdt(cdt, tm);
+  cdt.microsecond = tv.tv_usec;
 }
 
 #endif //_CFL_DT_H_

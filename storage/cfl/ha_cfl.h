@@ -236,6 +236,7 @@ public:
       使用索引查询的初始化动作在此
       参数：
         index:索引查询所使用的索引编号
+        sorted:待研究
   */
   int index_init(uint index, bool sorted);
   /** @brief
@@ -243,7 +244,12 @@ public:
   */
   int index_end();
   /** @brief
-      进行索引的读取
+      进行索引的读取。
+      参数
+        buf
+        key:进行查询的key数据
+        key_len:数据的长度
+        find_flag:进行索引定位。HA_READ_AFTER_KEY，表示在定位到大于key数据的最小记录
   */
   int index_read(uchar * buf, const uchar * key, uint key_len,
                  enum ha_rkey_function find_flag);
