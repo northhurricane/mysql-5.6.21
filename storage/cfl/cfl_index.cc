@@ -102,17 +102,21 @@ CflIndex::Destroy(CflIndex *index)
 }
 
 uint32_t
-CflIndex::Locate(cfl_dti_t key)
+CflIndex::LocatePage(cfl_dti_t key, cfl_key_cmp key_cmp)
 {
   //使用二分法进行定位
   uint32_t low, mid, high;
-  uint32_t index_node_count = 0;
+  uint32_t index_node_count = node_count_;
   bool found = false;
   cfl_dti_t index_key;
 
-  low = 0;
-  high = index_node_count + 1;
-  mid = (low + high) / 2 + 1;
+  //如果没有数据内容
+  if (index_node_count == 0)
+    return CFL_LOCATE_PAGE_NULL;
+
+  low = 0;//虚拟最小记录
+  high = index_node_count + 1; //虚拟最大记录
+  mid = (low + high) / 2; //中间记录，
   //
   while (low + 1 < high)
   {
@@ -132,12 +136,50 @@ CflIndex::Locate(cfl_dti_t key)
     }
   }
 
+  uint32_t page_no = 0;
   if (found)
   {
-    return mid;
+    //找到和key相等的页面索引
+    //根据key_cmp确定页面
+    switch(key_cmp)
+    {
+    case KEY_EQUAL:
+    case KEY_GE:
+    case KEY_L:
+      //定位第一个和key相等的page
+      break;
+    case KEY_G:
+      //定位第一个大于key的page
+      break;
+    case KEY_LE:
+      //定位最后一个和key相等的page
+      break;
+    default:
+      DBUG_ASSERT(false);
+    }
+
+    return page_no;
   }
 
-  return low;
+  //未找到和key相等的页面索引，此时key的值在low和high之间
+  switch(key_cmp)
+  {
+  case KEY_EQUAL:
+  case KEY_GE:
+  case KEY_G:
+    //所需要定位的记录在high所指向的page
+    //如果high等于index_node_count + 1则说明没有合适的page页
+    break;
+  case KEY_LE:
+  case KEY_L:
+    //所需要定位的记录在high所指向的page
+    //如果high等于index_node_count + 1则所定位的记录在low的page中
+    break;
+  default:
+    DBUG_ASSERT(false);
+  }
+
+  return page_no;
 }
 
 

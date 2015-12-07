@@ -4,6 +4,7 @@
 #include <my_pthread.h>
 #include "cfl_dt.h"
 #include "cfl_page.h"
+#include "cfl.h"
 
 /*
 每个CflTable对象对应一个cfl引擎的表，该对象用来组织cfl表的存储
@@ -35,6 +36,11 @@ public :
   /*读取数据页*/
   int ReadPage(void *buffer, uint32_t buffer_size, uint32_t nth_page);
 
+  /*
+    定位页面
+  */
+  uint32_t LocatePage(cfl_dti_t dti, enum cfl_key_cmp keycmp);
+
 private :
   CflIndex *index_;
   CflData *data_;
@@ -63,6 +69,7 @@ public :
 
 public :
   void Insert(cfl_dti_t key, void *row, uint16_t row_size);
+
   CflStorage *GetStorage() { return storage_; }
 
 private :

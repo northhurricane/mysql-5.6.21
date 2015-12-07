@@ -10,7 +10,7 @@ class CflPage;
 
 struct cfl_cursor_struct
 {
-  uint64_t position;  //行位置
+  uint64_t position;  //1-based.行位置
   uint32_t page_no;   //0-based.当前页的编号
   CflPage  *page;     //当前页的内存对象
   uint32_t row_no; //0-based.当前页的当前record

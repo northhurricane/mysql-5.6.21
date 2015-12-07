@@ -86,6 +86,13 @@ static handler *cfl_create_handler(handlerton *hton,
 #define CFL_INDEX_TIMESTAMP_NAME "key_timestamp"
 #define CFL_INDEX_TIMESTAMP_SCALE 6
 
+inline void
+cfl_isearch_init(cfl_isearch_t &isearch)
+{
+  isearch.key = 0;
+  isearch.key_cmp = KEY_EQUAL;
+}
+
 static int
 cfl_check_create_info(TABLE *table_arg, HA_CREATE_INFO *create_info)
 {
@@ -1279,6 +1286,7 @@ ha_cfl::index_init(uint idx, bool sorted)
 
   DBUG_ASSERT(idx == 0);
   active_index= idx;
+  cfl_isearch_init(isearch_);
 
   DBUG_RETURN(0);
 }
@@ -1299,35 +1307,28 @@ ha_cfl::index_read(uchar * buf, const uchar * key, uint key_len,
   int rc = 0;
 
   DBUG_ASSERT(table->key_info != NULL);
-  KEY *index = table->key_info + active_index;
+  //KEY *index = table->key_info + active_index;
 
-  //longlong dtpack = my_datetime_packed_from_binary(key, 6);
-  //MYSQL_TIME ltime;
-  //TIME_from_longlong_datetime_packed(&ltime, dtpack);
+  //获取过滤条件
   struct timeval tv;
   cfl_dt_t cdt;
   my_timestamp_from_binary(&tv, key, 6);
   cfl_tv2cdt(cdt, tv);
   cfl_dti_t dti;
   dti = cfl_t2i(&cdt);
+  //构造查询结果
+  isearch_.key = dti;
+  isearch_.key_cmp = my_key_func2clf_key_cmp(find_flag);
+  //检查输入内容是否接受
+  if (isearch_.key_cmp == KEY_INVALID)
+  {
+    rc= HA_ERR_WRONG_COMMAND;
+    DBUG_RETURN(rc);
+  }
 
   old_map= dbug_tmp_use_all_columns(table, table->write_set);
 
-  switch (find_flag)
-  {
-  case HA_READ_KEY_EXACT:
-  {
-    break;
-  }
-  case HA_READ_AFTER_KEY:
-  {
-    break;
-  }
-  default:
-  {
-    DBUG_ASSERT(false);
-  }
-  }
+  rc = locate_cursor();
 
   dbug_tmp_restore_column_map(table->write_set, old_map);
   DBUG_RETURN(rc);
@@ -1406,6 +1407,43 @@ int ha_cfl::index_last(uchar *buf)
   rc= HA_ERR_WRONG_COMMAND;
   MYSQL_INDEX_READ_ROW_DONE(rc);
   DBUG_RETURN(rc);
+}
+
+int ha_cfl::locate_cursor()
+{
+  int rc = 0;
+
+  DBUG_ASSERT(cfl_cursor_position_get(cursor_) == CFL_CURSOR_BEFOR_START);
+
+  uint64_t locate_pos = CFL_CURSOR_AFTER_END;
+
+  //首先进行页面的定位，然后再定位记录
+  cfl_dti_t key = isearch_.key;
+  enum cfl_key_cmp key_cmp = isearch_.key_cmp;
+  CflStorage *storage = cfl_table_->GetStorage();
+  uint32_t page_no = CFL_LOCATE_PAGE_NULL;
+  //定位页面
+  page_no = storage->LocatePage(key, key_cmp);
+  //定位页面内的记录
+
+  if (!rc)
+    return rc;
+
+  if (locate_pos != CFL_CURSOR_AFTER_END)
+  {
+    //找到数据
+  }
+  else
+  {
+    //未找到数据
+    cfl_cursor_position_set(cursor_, CFL_CURSOR_AFTER_END);
+    //没有更多的数据
+    int rc= HA_ERR_END_OF_FILE;
+    //更新cfl_rnd的
+    MYSQL_READ_ROW_DONE(rc);
+  }
+
+  return 0;
 }
 
 void

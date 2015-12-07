@@ -85,6 +85,12 @@ CflStorage::Deinitialize()
   return 0;
 }
 
+uint32_t
+CflStorage::LocatePage(cfl_dti_t key, enum cfl_key_cmp keycmp)
+{
+  return index_->LocatePage(key, keycmp);
+}
+
 /*CflTable*/
 int
 CflTable::CreateStorage(const char *name)

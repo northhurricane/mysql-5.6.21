@@ -39,7 +39,9 @@
 #include "handler.h"                     /* handler */
 #include "my_base.h"                     /* ha_rows */
 #include <stdint.h>
+#include "cfl.h"
 #include "cfl_cursor.h"
+#include "cfl_dt.h"
 
 #define CFL_MAX_COLUMN_IN_KEY_DEFINATION (1)
 #define CFL_MAX_INDEX_IN_TABLE_DEFINATION (1)
@@ -63,11 +65,15 @@ public:
   }
 };
 
-struct cfl_index_search_struct
+/*
+  index search struct
+*/
+struct cfl_isearch_struct
 {
-  //  cfl_dti_t key;
+  cfl_dti_t key;
+  enum cfl_key_cmp key_cmp;  
 };
-typedef struct cfl_index_search_struct cfl_index_search_t;
+typedef struct cfl_isearch_struct cfl_isearch_t;
 
 /** @brief
   Class definition for the storage engine
@@ -304,6 +310,7 @@ public:
 private :
   CflTable *cfl_table_;
   cfl_cursor_t cursor_;
+  cfl_isearch_t isearch_;
   /*
     获取下一条记录
     参数:
@@ -320,6 +327,10 @@ private :
     取得页面内行的指针。
   */
   int fetch();
+  /*
+     根据isearch_中的信息，进行cursor定位，在cursor_中确定记录的位置
+  */
+  int locate_cursor();
   /*
     进行table的统计信息构造
   */

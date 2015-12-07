@@ -2,6 +2,7 @@
 #define _CFL_INDEX_H_
 
 #include <stdio.h>
+#include "cfl.h"
 #include "cfl_dt.h"
 #include "cfl_endian.h"
 #include "cfl_file.h"
@@ -17,7 +18,7 @@ index head的结构
 index node number:32bit，用于记录当前index node的个数。也就是数据文件中的有效页面数
 */
 /*
-index node:64bit，对应的数据页的最小时间节点。
+index node:64bit，对应的数据页的最大时间节点。
 */
 
 #define CFL_INDEX_HEAD (0)
@@ -39,7 +40,7 @@ public :
   static int Destroy(CflIndex *index);
 
   /*定位key所在的页，可能存在多个页面的key相同，定位的是第一个*/
-  uint32_t Locate(cfl_dti_t key);
+  uint32_t LocatePage(cfl_dti_t key, enum cfl_key_cmp keycmp);
   uint32_t ReadNodeCount()
   {
     uint8_t *node_count_pos = buffer_ + CFL_INDEX_NODE_COUNT;
@@ -83,7 +84,8 @@ private :
   uint8_t *buffer_;
   uint32_t buffer_size_;
 
-  uint32_t node_count_;
+  uint32_t node_count_; //当前索引的
+
   int WriteHead();
   void IncrNodeCount() ;
 };

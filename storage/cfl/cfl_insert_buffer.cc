@@ -60,7 +60,7 @@ CflInsertBuffer::Flush(CflPageMaker *maker, CflStorage *storage)
                     , sorted_eles_[i].row_size);
   }
 
-  maker->Flush(storage, sorted_eles_[1].key);
+  maker->Flush(storage, sorted_eles_[max_row].key);
 
   Reset();
 
