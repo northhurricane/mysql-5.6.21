@@ -39,7 +39,10 @@ public :
   static CflIndex *Create(const char *name);
   static int Destroy(CflIndex *index);
 
-  /*定位key所在的页，可能存在多个页面的key相同，定位的是第一个*/
+  /*
+    定位key所在的页，可能存在多个页面的key相同，定位的是第一个
+    返回值：1-based。
+  */
   uint32_t LocatePage(cfl_dti_t key, enum cfl_key_cmp keycmp);
   uint32_t ReadNodeCount()
   {

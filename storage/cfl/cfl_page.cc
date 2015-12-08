@@ -251,3 +251,9 @@ CflPagePool::Enqueue(CflPage *page)
 
   return 0;
 }
+
+uint32_t
+cfl_page_locate_row(Field ** fields)
+{
+  return CFL_LOCATE_ROW_NULL;
+}

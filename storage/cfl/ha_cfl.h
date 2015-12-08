@@ -328,9 +328,17 @@ private :
   */
   int fetch();
   /*
-     根据isearch_中的信息，进行cursor定位，在cursor_中确定记录的位置
+    根据isearch_中的信息，进行cursor定位，在cursor_中确定记录的位置
   */
   int locate_cursor();
+  /*
+    根据isearch_中的信息，进行页面的定位
+  */
+  uint32_t locate_page();
+  /*
+    根据locate_page定位得到的page number，进行页面内的行定位
+  */
+  int locate_row(uint32_t page_no);
   /*
     进行table的统计信息构造
   */

@@ -132,6 +132,43 @@ cfl_field_from_mysql(Field *field, void *buf, uint32_t buf_size)
   return 0;
 }
 
+inline int
+cfl_field_length(Field *field, uint8_t *field_data)
+{
+  enum_field_types type = field->type();
+  switch (type)
+  {
+  case MYSQL_TYPE_TINY:
+  {
+    return sizeof(uint8_t);
+  }
+  case MYSQL_TYPE_SHORT:
+  {
+    return sizeof(uint16_t);
+  }
+  case MYSQL_TYPE_LONG:
+  {
+    return sizeof(uint32_t);
+  }
+  case MYSQL_TYPE_LONGLONG:
+  {
+    return sizeof(uint64_t);
+  }
+  case MYSQL_TYPE_TIMESTAMP:
+  {
+    return CFL_DTI_STORAGE_SIZE;
+  }
+  default:
+  {
+    //通过字符方式存储
+    uint16_t str_len = endian_read_uint16(field_data);
+    return str_len + sizeof(uint16_t);
+  }
+  }
+  
+  return 0;
+}
+
 /*
 返回值:
   小于0，出现错误
@@ -266,4 +303,29 @@ cfl_row_to_mysql(Field ** fields, uchar *buf, uchar *row,
   }
 
   return 0;
+}
+
+void*
+cfl_row_get_nth_field(Field ** fields, uint8_t *cfl_row, uint32_t row_length
+                      , uint32_t nth_field, uint32_t *field_len)
+{
+  uint8_t *cfl_field = cfl_row;
+  int field_length = 0;
+  int counter = 0;
+
+  *field_len = 0;
+  for (Field **field = fields ; *field ; field++)
+  {
+    field_length = cfl_field_length(*field, cfl_field);
+
+    if (counter == nth_field)
+      break;
+
+    counter++;
+    cfl_field += field_length;
+  }
+  DBUG_ASSERT(counter == nth_field);
+
+  *field_len = field_length;
+  return cfl_field;
 }

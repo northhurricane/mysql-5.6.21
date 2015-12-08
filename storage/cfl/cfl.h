@@ -38,5 +38,7 @@ my_key_func2clf_key_cmp(enum ha_rkey_function key_func)
 
 #define CFL_LOCATE_PAGE_NULL (0xFFFFFFFF)
 
+#define CFL_LOCATE_ROW_NULL (0xFFFFFFFF)
+
 #endif //_CFL_H_
 

@@ -20,4 +20,14 @@ int
 cfl_row_to_mysql(Field ** fields, uchar *buf, uchar *row, 
                  uint8_t * cfl_row, uint32_t row_length);
 
+
+/*
+  获取cfl格式的row中的数据
+  参数
+    nth:0-based
+*/
+void*
+cfl_row_get_nth_field(Field ** fields, uint8_t *cfl_row, uint32_t row_length
+                      , uint32_t nth_field, uint32_t *field_len);
+
 #endif //_CFL_ROW_H_

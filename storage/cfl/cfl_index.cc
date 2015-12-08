@@ -136,24 +136,75 @@ CflIndex::LocatePage(cfl_dti_t key, cfl_key_cmp key_cmp)
     }
   }
 
-  uint32_t page_no = 0;
+  uint32_t page_no = CFL_LOCATE_PAGE_NULL; //1-based
   if (found)
   {
     //找到和key相等的页面索引
     //根据key_cmp确定页面
+    page_no = mid;
     switch(key_cmp)
     {
     case KEY_EQUAL:
     case KEY_GE:
     case KEY_L:
+    {
       //定位第一个和key相等的page
+      uint32_t page_no_next = page_no;
+      page_no--;
+      while (page_no > 0)
+      {
+        index_key = ReadNthIndexNode(page_no - 1);
+        if (index_key < key)
+        {
+          break;
+        }
+
+        page_no_next = page_no;
+        page_no--;
+      }
+      page_no = page_no_next;
       break;
+    }
     case KEY_G:
+    {
       //定位第一个大于key的page
+      page_no++;
+      while (page_no < (index_node_count + 1))
+      {
+        index_key = ReadNthIndexNode(page_no - 1);
+        if (index_key > key)
+        {
+          break;
+        }
+        page_no++;
+      }
+      if (index_key == key)
+      {
+        //未找到相应的key
+        DBUG_ASSERT(page_no == (index_node_count + 1));
+        page_no = CFL_LOCATE_PAGE_NULL;
+      }
       break;
+    }
     case KEY_LE:
+    {
       //定位最后一个和key相等的page
+      uint32_t page_no_prev = page_no;
+      page_no++;
+      while (page_no < index_node_count + 1)
+      {
+        index_key = ReadNthIndexNode(page_no - 1);
+        if (index_key > key)
+        {
+          break;
+        }
+
+        page_no_prev = page_no;
+        page_no++;
+      }
+      page_no = page_no_prev;
       break;
+    }
     default:
       DBUG_ASSERT(false);
     }
@@ -167,14 +218,26 @@ CflIndex::LocatePage(cfl_dti_t key, cfl_key_cmp key_cmp)
   case KEY_EQUAL:
   case KEY_GE:
   case KEY_G:
+  {
     //所需要定位的记录在high所指向的page
     //如果high等于index_node_count + 1则说明没有合适的page页
+    if (high == (index_node_count + 1))
+      page_no = CFL_LOCATE_PAGE_NULL;
+    else
+      page_no = high;
     break;
+  }
   case KEY_LE:
   case KEY_L:
+  {
     //所需要定位的记录在high所指向的page
     //如果high等于index_node_count + 1则所定位的记录在low的page中
+    if (high == (index_node_count + 1))
+      page_no = high - 1;
+    else
+      page_no = high;
     break;
+  }
   default:
     DBUG_ASSERT(false);
   }

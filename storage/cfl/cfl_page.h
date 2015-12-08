@@ -6,6 +6,8 @@
 #include <string.h>
 #include "cfl_endian.h"
 #include "cfl_dt.h"
+#include <field.h>
+#include "cfl.h"
 
 using namespace std;
 /*
@@ -206,5 +208,13 @@ private :
   CflPage *Dequeue();
   int Enqueue(CflPage *page);
 };
+
+/*
+  在页面内定位行。
+  返回值：true，
+*/
+bool
+cfl_page_locate_row(void *page, Field ** fields, cfl_dti_t key
+                    , enum cfl_key_cmp key_cmp, uint32_t *row_no);
 
 #endif //_CFL_PAGE_H_

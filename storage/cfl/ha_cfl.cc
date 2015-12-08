@@ -1415,35 +1415,77 @@ int ha_cfl::locate_cursor()
 
   DBUG_ASSERT(cfl_cursor_position_get(cursor_) == CFL_CURSOR_BEFOR_START);
 
-  uint64_t locate_pos = CFL_CURSOR_AFTER_END;
-
   //首先进行页面的定位，然后再定位记录
+  //定位页面
+  uint32_t page_no = CFL_LOCATE_PAGE_NULL;
+  page_no = locate_page();
+  if (page_no == CFL_LOCATE_PAGE_NULL)
+  {
+    //未找到数据
+    cfl_cursor_position_set(cursor_, CFL_CURSOR_AFTER_END);
+    int rc= HA_ERR_END_OF_FILE;
+    return rc;
+  }
+  //定位页面内的记录
+  rc = locate_row(page_no);
+
+  return rc;
+}
+
+uint32_t ha_cfl::locate_page()
+{
   cfl_dti_t key = isearch_.key;
   enum cfl_key_cmp key_cmp = isearch_.key_cmp;
   CflStorage *storage = cfl_table_->GetStorage();
   uint32_t page_no = CFL_LOCATE_PAGE_NULL;
   //定位页面
   page_no = storage->LocatePage(key, key_cmp);
-  //定位页面内的记录
-
-  if (!rc)
-    return rc;
-
-  if (locate_pos != CFL_CURSOR_AFTER_END)
-  {
-    //找到数据
-  }
-  else
+  if (page_no == CFL_LOCATE_PAGE_NULL)
   {
     //未找到数据
     cfl_cursor_position_set(cursor_, CFL_CURSOR_AFTER_END);
-    //没有更多的数据
     int rc= HA_ERR_END_OF_FILE;
-    //更新cfl_rnd的
-    MYSQL_READ_ROW_DONE(rc);
+    return rc;
   }
 
-  return 0;
+  return page_no;
+}
+
+int ha_cfl::locate_row(uint32_t page_no)
+{
+  /*
+    传入的页面是通过locate_page得到的页面，在该页面进行进一步的定位工作
+  */
+  int rc = 0;
+
+  CflPage *page = NULL;
+  page = CflPageManager::GetPage(cfl_table_->GetStorage(), page_no);
+  cfl_dti_t key = isearch_.key;
+  enum cfl_key_cmp key_cmp = isearch_.key_cmp;
+
+  //在页中定位行
+  uint32_t row_no = CFL_LOCATE_ROW_NULL;
+  bool found = false;
+  void *page_data = NULL;
+  //found = cfl_page_locate_row(page_data, table->field, key, key_cmp, &row_no);
+  /*if (found)
+  {
+    switch (key_cmp)
+    {
+    case KEY_EQUAL:
+      //
+    }
+    }*/
+
+  /*
+  if (cfl_cursor_position_get(cursor_) == CFL_CURSOR_AFTER_END)
+  {
+    //未找到数据
+    int rc= HA_ERR_END_OF_FILE;
+    MYSQL_READ_ROW_DONE(rc);
+  }
+  */
+  return rc;
 }
 
 void
