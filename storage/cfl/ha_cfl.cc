@@ -1409,6 +1409,11 @@ int ha_cfl::index_last(uchar *buf)
   DBUG_RETURN(rc);
 }
 
+/*
+名词说明
+索引key：index_read传入的用于查询的key值
+页面key：数据文件中每个页面对应的key（参考cfl_index.h中使用key的说明）
+*/
 int ha_cfl::locate_cursor()
 {
   int rc = 0;
@@ -1438,15 +1443,8 @@ uint32_t ha_cfl::locate_page()
   enum cfl_key_cmp key_cmp = isearch_.key_cmp;
   CflStorage *storage = cfl_table_->GetStorage();
   uint32_t page_no = CFL_LOCATE_PAGE_NULL;
-  //定位页面
+
   page_no = storage->LocatePage(key, key_cmp);
-  if (page_no == CFL_LOCATE_PAGE_NULL)
-  {
-    //未找到数据
-    cfl_cursor_position_set(cursor_, CFL_CURSOR_AFTER_END);
-    int rc= HA_ERR_END_OF_FILE;
-    return rc;
-  }
 
   return page_no;
 }
@@ -1464,27 +1462,168 @@ int ha_cfl::locate_row(uint32_t page_no)
   enum cfl_key_cmp key_cmp = isearch_.key_cmp;
 
   //在页中定位行
-  uint32_t row_no = CFL_LOCATE_ROW_NULL;
-  bool found = false;
+  bool found = false;   //是否在页面内定位到数据
+  uint32_t row_no_found = 0; //定位得到的记录
   void *page_data = NULL;
-  //found = cfl_page_locate_row(page_data, table->field, key, key_cmp, &row_no);
-  /*if (found)
+  //found = cfl_page_locate_row(page_data
+  //, table->field, key, key_cmp, &found_row_no);
+
+  uint32_t row_no = CFL_LOCATE_ROW_NULL; //定位后的第一条记录
+  uint32 row_count = 0; //当前页面内记录数
+  uint32_t row_no_curr = row_no_found;
+  if (found)
+  {
+    cfl_dti_t row_key;
+    switch (key_cmp)
+    {
+    case KEY_EQUAL:
+    case KEY_GE:
+    {
+      //当前页面必然是等于key的最小页，在该页面必然存在满足条件的记录
+      //向前遍历，定位等于该key的第一个记录
+      //定位记录
+      uint32_t row_no_next = row_no_curr;
+      row_no_curr--;
+      row_key = 0; //根据row_no_curr获取当前row的key
+      while (row_no_curr > 0)
+      {
+        if (row_key < key)
+          break;
+        row_no_next = row_no_curr;
+        row_no_curr--;
+        row_key = 0;
+      }
+      row_no = row_no_next;
+      break;
+    }
+    case KEY_G:
+    {
+      //当前页面key必然是大于索引key的最小页，在该页面必然存在满足条件的记录
+      //向后遍历，定位大于该key的第一个记录，如果超过最大记录，则必定在下一页中
+      //定位记录
+      uint32_t row_no_prev = row_no_curr;
+      row_no_curr++;
+      row_key = 0;
+      while (row_no_curr < row_count)
+      {
+        if (row_key > key)
+          break;
+        row_no_prev = row_no_curr;
+        row_no_curr++;
+        row_key = 0;
+      }
+      row_no = row_no_curr;
+      break;
+    }
+    case KEY_LE:
+    {
+      //当前页面的key必然是包含索引key值的最大页面，后一个页面必然大于索引key
+      //向后遍历，定位等于该key的记录最后一条记录
+      uint32_t row_no_prev = row_no_curr;
+      row_no_curr++;
+      row_key = 0;
+      while (row_no_curr < row_count)
+      {
+        if (row_key > key)
+          break;
+        row_no_prev = row_no_curr;
+        row_no_curr++;
+        row_key = 0;
+      }
+      row_no = row_no_prev;
+      break;
+    }
+    case KEY_L:
+    {
+      //向前遍历，定位小于该key的第一个记录。
+      //如果不在当前页，则必然在前一页。如果前一页不存在，则无满足条件记录
+      uint32_t row_no_next = row_no_curr;
+      row_no_next = row_no_curr;
+      row_key = 0; //获取当前key
+      while (row_no_curr > 0)
+      {
+        if (row_key < key)
+          break;
+        row_no_next = row_no_curr;
+        row_no_curr--;
+        row_key = 0;
+      }
+      row_no = row_no_curr;
+      break;
+    }
+    default:
+      DBUG_ASSERT(false);
+    }
+  }
+  else
   {
     switch (key_cmp)
     {
     case KEY_EQUAL:
-      //
+    {
+      //等值定位，报告未找到数据
+      break;
     }
-    }*/
-
-  /*
-  if (cfl_cursor_position_get(cursor_) == CFL_CURSOR_AFTER_END)
+    case KEY_GE:
+    case KEY_G:
+    {
+      //由于不存在等值的情况
+      //此时索引key必然小于当前页的最大key，待定位的记录必然在该页面内
+      //也就是high所指向的记录
+      row_no = row_no_found;
+      break;
+    }
+    case KEY_LE:
+    case KEY_L:
+    {
+      //由于不存在等值的情况
+      //此时该key必然小于当前页的最大key，但大于前一页的最大key
+      //所以，待定位的记录必然存在当前页或者前一页
+      //如果不在当前页，在必定在前一页
+      //如果不存在前一页，在说明不存在要查询的记录
+      if (row_no_found == 1)
+      {
+        //在前一页
+        //释放当前页
+        //如果不存在前一页，在说明不存在要查询的记录
+        CflPageManager::PutPage(page);
+        page_no--;
+        if (page_no < 1)
+        {
+          row_no = CFL_LOCATE_ROW_NULL;
+        }
+        else
+        {
+          row_no = 0;
+          page = CflPageManager::GetPage(cfl_table_->GetStorage(), page_no);
+        }
+      }
+      else
+      {
+        //在当前页
+        row_no = row_no_found - 1;
+      }
+    }
+    default:
+      DBUG_ASSERT(false);
+    }
+  }
+  //设置cursor相关信息
+  if (row_no == CFL_LOCATE_ROW_NULL)
   {
-    //未找到数据
+    //未找到
+    cfl_cursor_position_set(cursor_, CFL_CURSOR_AFTER_END);
     int rc= HA_ERR_END_OF_FILE;
     MYSQL_READ_ROW_DONE(rc);
   }
-  */
+  else
+  {
+    //设置cursor内容
+    cfl_cursor_page_no_set(cursor_, page_no);
+    cfl_cursor_row_no_set(cursor_, row_no);
+    cfl_cursor_position_set(cursor_, 1);
+  }
+
   return rc;
 }
 

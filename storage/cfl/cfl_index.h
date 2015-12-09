@@ -18,7 +18,7 @@ index head的结构
 index node number:32bit，用于记录当前index node的个数。也就是数据文件中的有效页面数
 */
 /*
-index node:64bit，对应的数据页的最大时间节点。
+index node:64bit，对应的数据页的最大时间节点的值。
 */
 
 #define CFL_INDEX_HEAD (0)

@@ -149,6 +149,8 @@ CflIndex::LocatePage(cfl_dti_t key, cfl_key_cmp key_cmp)
     case KEY_L:
     {
       //定位第一个和key相等的page
+      //原因1，对于EQUAL/GE来说，这是毫无疑问的
+      //原因2，对于L来说，满足条件的记录只能在，第一个和参数key相等的页面，和前一个页面
       uint32_t page_no_next = page_no;
       page_no--;
       while (page_no > 0)
@@ -166,8 +168,14 @@ CflIndex::LocatePage(cfl_dti_t key, cfl_key_cmp key_cmp)
       break;
     }
     case KEY_G:
+    case KEY_LE:
     {
       //定位第一个大于key的page
+      //原因1，对于G来说，所有页面的key值等于参数key值得页面必然是不符合要求，
+      //也就是，这些页面的时间标记都小于参数key，所以必须是大于该key的
+      //原因2，对于LE来说，由于时间字段不是唯一标识
+      //所以，最后一个页面的key值等于参数key的，在其后页面的记录，
+      //有可能等于参数key
       page_no++;
       while (page_no < (index_node_count + 1))
       {
@@ -186,25 +194,6 @@ CflIndex::LocatePage(cfl_dti_t key, cfl_key_cmp key_cmp)
       }
       break;
     }
-    case KEY_LE:
-    {
-      //定位最后一个和key相等的page
-      uint32_t page_no_prev = page_no;
-      page_no++;
-      while (page_no < index_node_count + 1)
-      {
-        index_key = ReadNthIndexNode(page_no - 1);
-        if (index_key > key)
-        {
-          break;
-        }
-
-        page_no_prev = page_no;
-        page_no++;
-      }
-      page_no = page_no_prev;
-      break;
-    }
     default:
       DBUG_ASSERT(false);
     }
@@ -213,6 +202,7 @@ CflIndex::LocatePage(cfl_dti_t key, cfl_key_cmp key_cmp)
   }
 
   //未找到和key相等的页面索引，此时key的值在low和high之间
+  //也就是参数key的值必然落在high所指向的page页内
   switch(key_cmp)
   {
   case KEY_EQUAL:
@@ -230,7 +220,7 @@ CflIndex::LocatePage(cfl_dti_t key, cfl_key_cmp key_cmp)
   case KEY_LE:
   case KEY_L:
   {
-    //所需要定位的记录在high所指向的page
+    //所有小于high的页面都是满足条件的页面，high所指向的页面可能部分满足条件
     //如果high等于index_node_count + 1则所定位的记录在low的page中
     if (high == (index_node_count + 1))
       page_no = high - 1;

@@ -7,7 +7,6 @@
 #include "cfl_endian.h"
 #include "cfl_dt.h"
 #include <field.h>
-#include "cfl.h"
 
 using namespace std;
 /*
@@ -211,10 +210,16 @@ private :
 
 /*
   在页面内定位行。
-  返回值：true，
+  参数：
+    row_no:1-based。返回值为true，指向定位到的数据；返回值为false，指向大于该记录的最小记录
+    
+  返回值：
+    true,找到等值的key
+    false,未找到等值的key
+  
 */
 bool
 cfl_page_locate_row(void *page, Field ** fields, cfl_dti_t key
-                    , enum cfl_key_cmp key_cmp, uint32_t *row_no);
+                    , uint32_t *row_no);
 
 #endif //_CFL_PAGE_H_
