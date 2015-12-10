@@ -1337,17 +1337,20 @@ ha_cfl::index_read(uchar * buf, const uchar * key, uint key_len,
 int
 ha_cfl::index_next(uchar *buf)
 {
-  int rc = 0;
   DBUG_ENTER("ha_cfl::index_next");
-  //MYSQL_INDEX_READ_ROW_START(table_share->db.str, table_share->table_name.str);
+
+  int rc = 0;
   bool over = true;
-  if (over)
+
+  rc = locate_next(over);
+  if (!rc)
   {
-    //没有更多的数据
-    rc= HA_ERR_END_OF_FILE;
-    //更新cfl_rnd的
-    MYSQL_READ_ROW_DONE(rc);
-    DBUG_RETURN(rc);
+    if (over)
+    {
+      //没有更多的数据
+      rc= HA_ERR_END_OF_FILE;
+      MYSQL_READ_ROW_DONE(rc);
+    }
   }
 
   DBUG_RETURN(rc);
@@ -1624,6 +1627,18 @@ int ha_cfl::locate_row(uint32_t page_no)
     cfl_cursor_position_set(cursor_, 1);
   }
 
+  return rc;
+}
+
+int
+ha_cfl::locate_next(bool &over)
+{
+  //todo
+  int rc = 0;
+  over = true;
+  //获取下一条记录
+  //如果无法获取下一条记录返回over
+  //比较该记录的key
   return rc;
 }
 

@@ -33,13 +33,35 @@ public :
 
   //
   int WritePage(void *page, uint32_t rows_count, cfl_dti_t dti);
-  /*读取数据页*/
+  /*
+    读取数据页
+    参数：
+      nth_page:0-based.
+  */
   int ReadPage(void *buffer, uint32_t buffer_size, uint32_t nth_page);
 
   /*
     定位页面
   */
   uint32_t LocatePage(cfl_dti_t dti, enum cfl_key_cmp keycmp);
+  /*
+    定位记录
+    返回值：
+      true :定位到满足条件的记录
+      false:没有定位到满足到的记录
+    参数：
+      key   :搜索key
+      keycmp:比较方式
+      result:
+        返回值为true有意义
+        KEY_EQUAL，返回等于key的第一条记录
+        KEY_GE   ，返回等于key的第一条记录
+        KEY_G    ，返回大于key的第一条记录
+        KEY_LE   ，返回等于key或者小于key的最后一条记录
+        KEY_L    ，返回小于key的最后一条记录
+  */
+  bool LocateRow(cfl_dti_t key, enum cfl_key_cmp keycmp
+                 , cfl_locate_result_t &result);
 
 private :
   CflIndex *index_;

@@ -172,7 +172,11 @@ public :
   static int Initialize(int pools_number, int pool_size);
   static int Deinitialize();
 
-  /*从存储中获取页*/
+  /*
+    从存储中获取页
+    参数：
+      nth_page
+  */
   static CflPage* GetPage(CflStorage *storage, uint32_t nth_page);
   /*将数据页归还*/
   static int PutPage(CflPage *page);

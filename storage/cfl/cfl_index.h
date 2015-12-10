@@ -41,7 +41,9 @@ public :
 
   /*
     定位key所在的页，可能存在多个页面的key相同，定位的是第一个
-    返回值：1-based。
+    返回值：
+      0-based。定位到的数据页
+      返回值为CFL_LOCATE_PAGE_NULL，表示没有满足条件的页面存在
   */
   uint32_t LocatePage(cfl_dti_t key, enum cfl_key_cmp keycmp);
   uint32_t ReadNodeCount()

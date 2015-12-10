@@ -324,7 +324,7 @@ private :
   */
   int next(bool &over);
   /*
-    取得页面内行的指针。
+    取得页面内行的数据。
   */
   int fetch();
   /*
@@ -339,6 +339,10 @@ private :
     根据locate_page定位得到的page number，进行页面内的行定位
   */
   int locate_row(uint32_t page_no);
+  /*
+    通过索引定位后的next
+  */
+  int locate_next(bool &over);
   /*
     进行table的统计信息构造
   */

@@ -106,23 +106,23 @@ CflIndex::Destroy(CflIndex *index)
 情况EQUAL:
   定位的记录是最前一个等于搜索key的记录。
   定位页面的key等于或者大于搜索key，定位页面的前一个页面的key必定小于搜索key。
-  如果定位到的页面是虚拟最大页面，则说明没有满足条件的记录
+  如果定位到的页面是虚拟最大页面，则说明没有满足条件的记录页
 情况GE:
   定位的记录是情况E的记录和气候的记录。
   定位页面和情况EQUAL相同
-  如果定位到的页面是虚拟最大页面，则说明没有满足条件的记录
+  如果定位到的页面是虚拟最大页面，则说明没有满足条件的记录页
 情况G:
   定位的记录是大于搜索key的最小记录。
   定位页面的key大于搜索key，定位页面的前一个页面的key必定等于或者小于搜索key
-  如果定位到的页面是虚拟最大页面，则说明没有满足条件的记录
+  如果定位到的页面是虚拟最大页面，则说明没有满足条件的记录页
 情况LE:
   定位的记录是最后一个等于搜索key的记录
   定位页面的key大于搜索key，定位页面的前一个页面的key必定等于或者小于搜索key
-  在此处，不存在没有满足条件的记录
+  在此处，不存在没有满足条件的记录页
 情况L:
   定位的记录是小于搜索key的最大记录
   定位页面的key等于或者大于搜索key，定位页面的前一个页面的key必定小于搜索key
-  在此处，不存在没有满足条件的记录
+  在此处，不存在没有满足条件的记录页
 */
 uint32_t
 CflIndex::LocatePage(cfl_dti_t key, cfl_key_cmp key_cmp)
@@ -229,38 +229,38 @@ CflIndex::LocatePage(cfl_dti_t key, cfl_key_cmp key_cmp)
     default:
       DBUG_ASSERT(false);
     }
-
-    return page_no;
   }
-
-  //未找到和key相等的页面索引，此时key的值在low和high之间
-  //也就是参数key的值必然大于low所指页面的记录
-  switch(key_cmp)
+  else
   {
-  case KEY_EQUAL:
-  case KEY_GE:
-  case KEY_G:
-  {
-    //如果high等于index_node_count + 1则说明最大页的所有记录都小于搜索key
-    if (high == (index_node_count + 1))
-      page_no = CFL_LOCATE_PAGE_NULL;
-    else
-      page_no = high;
-    break;
-  }
-  case KEY_LE:
-  case KEY_L:
-  {
-    //所有小于high的页面都是满足条件的页面，high所指向的页面可能部分满足条件
-    //如果high等于index_node_count + 1则所定位的记录在low的page中
-    if (high == (index_node_count + 1))
-      page_no = index_node_count;
-    else
-      page_no = high;
-    break;
-  }
-  default:
-    DBUG_ASSERT(false);
+    //未找到和key相等的页面索引，此时key的值在low和high之间
+    //也就是参数key的值必然大于low所指页面的记录
+    switch(key_cmp)
+    {
+    case KEY_EQUAL:
+    case KEY_GE:
+    case KEY_G:
+    {
+      //如果high等于index_node_count + 1则说明最大页的所有记录都小于搜索key
+      if (high == (index_node_count + 1))
+        page_no = CFL_LOCATE_PAGE_NULL;
+      else
+        page_no = high;
+      break;
+    }
+    case KEY_LE:
+    case KEY_L:
+    {
+      //所有小于high的页面都是满足条件的页面，high所指向的页面可能部分满足条件
+      //如果high等于index_node_count + 1则所定位的记录在low的page中
+      if (high == (index_node_count + 1))
+        page_no = index_node_count;
+      else
+        page_no = high;
+      break;
+    }
+    default:
+      DBUG_ASSERT(false);
+    }
   }
 
   return page_no;
