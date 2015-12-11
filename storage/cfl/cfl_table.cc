@@ -93,13 +93,15 @@ CflStorage::LocatePage(cfl_dti_t key, enum cfl_key_cmp keycmp)
 
 bool
 CflStorage::LocateRow(cfl_dti_t key, enum cfl_key_cmp keycmp
-                      , cfl_locate_result_t &result)
+                      , cfl_cursor_t &cursor)
 {
-  result.page_no = CFL_LOCATE_PAGE_NULL;
-  result.row_no = CFL_LOCATE_ROW_NULL;
+  cursor.page_no = CFL_LOCATE_PAGE_NULL;
+  cursor.row_no = CFL_LOCATE_ROW_NULL;
 
-  uint32_t page_no;  //0-based. inherited from LocatePage
-  uint32_t row_no;   //0-based.
+  //根据key和keycmp进行相关的定位
+  uint32_t page_no;  //0-based. for LocatePage and cursor
+  uint32_t row_no;   //0-based. for cursor
+
   page_no = index_->LocatePage(key, keycmp);
   if (page_no == CFL_LOCATE_PAGE_NULL)
   {
@@ -117,7 +119,10 @@ CflStorage::LocateRow(cfl_dti_t key, enum cfl_key_cmp keycmp
                              //该变量的变量，row_no_curr等也是如此
   uint32_t row_count;        //当前页的行数
 
+  //基于row_no_found进行row定位的变量
   uint32_t row_no_curr = row_no_found; //1-based。
+  uint32_t row_no_prev = CFL_LOCATE_ROW_NULL; //1-based
+  uint32_t row_no_next = CFL_LOCATE_ROW_NULL; //1-based
   if (found)
   {
     cfl_dti_t row_key;
@@ -127,7 +132,7 @@ CflStorage::LocateRow(cfl_dti_t key, enum cfl_key_cmp keycmp
     case KEY_GE:
     {
       //向前遍历，定位等于该key的第一个记录
-      uint32_t row_no_next = row_no_curr;
+      row_no_next = row_no_curr;
       row_no_curr--;
       row_key = 0; //根据row_no_curr获取当前row的key
       while (row_no_curr > 0)
@@ -146,7 +151,7 @@ CflStorage::LocateRow(cfl_dti_t key, enum cfl_key_cmp keycmp
       //当前页面key必然是大于索引key的最小页，在该页面必然存在满足条件的记录
       //向后遍历，定位大于该key的第一个记录，如果超过最大记录，则必定在下一页中
       //定位记录
-      uint32_t row_no_prev = row_no_curr;
+      row_no_prev = row_no_curr;
       row_no_curr++;
       row_key = 0;
       while (row_no_curr < row_count)
@@ -164,7 +169,7 @@ CflStorage::LocateRow(cfl_dti_t key, enum cfl_key_cmp keycmp
     {
       //当前页面的key必然是包含索引key值的最大页面
       //向后遍历，定位等于该key的记录最后一条记录
-      uint32_t row_no_prev = row_no_curr;
+      row_no_prev = row_no_curr;
       row_no_curr++;
       row_key = 0;
       while (row_no_curr < row_count)
@@ -182,7 +187,6 @@ CflStorage::LocateRow(cfl_dti_t key, enum cfl_key_cmp keycmp
     {
       //向前遍历，定位小于该key的第一个记录。
       //如果不在当前页，则必然在前一页。如果前一页不存在，则无满足条件记录
-      uint32_t row_no_next = row_no_curr;
       row_no_next = row_no_curr;
       row_no_curr--;
       row_key = 0; //获取当前key
@@ -218,7 +222,7 @@ CflStorage::LocateRow(cfl_dti_t key, enum cfl_key_cmp keycmp
     case KEY_EQUAL:
     {
       //等值定位，报告未找到数据
-      return false;
+      goto not_found;
     }
     case KEY_GE:
     case KEY_G:
@@ -244,7 +248,7 @@ CflStorage::LocateRow(cfl_dti_t key, enum cfl_key_cmp keycmp
         {
           //如果不存在前一页，在说明不存在要查询的记录
           row_no = CFL_LOCATE_ROW_NULL;
-          return false;
+          goto not_found;
         }
         else
         {
@@ -266,8 +270,9 @@ CflStorage::LocateRow(cfl_dti_t key, enum cfl_key_cmp keycmp
     }
   }
 
-  result.page_no = page_no;
-  result.row_no = row_no;
+  cfl_cursor_page_no_set(cursor, page_no);
+  cfl_cursor_row_no_set(cursor, row_no);
+  cfl_cursor_page_set(cursor, page);
 
   return true;
 

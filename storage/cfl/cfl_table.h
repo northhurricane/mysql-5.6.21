@@ -5,6 +5,7 @@
 #include "cfl_dt.h"
 #include "cfl_page.h"
 #include "cfl.h"
+#include "cfl_cursor.h"
 
 /*
 每个CflTable对象对应一个cfl引擎的表，该对象用来组织cfl表的存储
@@ -61,7 +62,7 @@ public :
         KEY_L    ，返回小于key的最后一条记录
   */
   bool LocateRow(cfl_dti_t key, enum cfl_key_cmp keycmp
-                 , cfl_locate_result_t &result);
+                 , cfl_cursor_t &cursor);
 
 private :
   CflIndex *index_;

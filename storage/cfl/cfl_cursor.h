@@ -19,7 +19,7 @@ struct cfl_cursor_struct
 };
 typedef cfl_cursor_struct cfl_cursor_t;
 
-void cfl_cursor_init(cfl_cursor_t &cursor)
+inline void cfl_cursor_init(cfl_cursor_t &cursor)
 {
   cursor.position = CFL_CURSOR_BEFOR_START;
 

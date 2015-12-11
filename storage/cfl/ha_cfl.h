@@ -332,14 +332,6 @@ private :
   */
   int locate_cursor();
   /*
-    根据isearch_中的信息，进行页面的定位
-  */
-  uint32_t locate_page();
-  /*
-    根据locate_page定位得到的page number，进行页面内的行定位
-  */
-  int locate_row(uint32_t page_no);
-  /*
     通过索引定位后的next
   */
   int locate_next(bool &over);

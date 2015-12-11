@@ -40,13 +40,4 @@ my_key_func2clf_key_cmp(enum ha_rkey_function key_func)
 
 #define CFL_LOCATE_ROW_NULL (0xFFFFFFFF)
 
-//定位的结果
-struct cfl_locate_result_struct
-{
-  uint32_t page_no;  //0-based。
-  uint32_t row_no;   //0-based。
-};
-typedef struct cfl_locate_result_struct cfl_locate_result_t;
-
 #endif //_CFL_H_
-
