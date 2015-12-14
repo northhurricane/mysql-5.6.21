@@ -40,4 +40,7 @@ my_key_func2clf_key_cmp(enum ha_rkey_function key_func)
 
 #define CFL_LOCATE_ROW_NULL (0xFFFFFFFF)
 
+#define CFL_INDEX_TIMESTAMP_NAME "key_timestamp"
+#define CFL_INDEX_TIMESTAMP_SCALE 6
+
 #endif //_CFL_H_

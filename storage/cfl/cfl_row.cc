@@ -331,7 +331,27 @@ cfl_row_get_nth_field(Field ** fields, uint8_t *cfl_row, uint32_t row_length
 }
 
 cfl_dti_t
-cfl_row_get_key_data(Field ** fields, uint8_t *cfl_row, uint32_t row_length)
+cfl_row_get_key_data(Field **fields, uint8_t *cfl_row, uint32_t row_length)
 {
-  return 0;
+  uint8_t *cfl_field = cfl_row;
+  int field_length = 0;
+  Field *rfield;
+  cfl_dti_t rowkey = 0;
+
+  for (Field **field = fields ; *field ; field++)
+  {
+    rfield = *field;
+    if (strcmp(rfield->field_name, CFL_INDEX_TIMESTAMP_NAME) == 0)
+    {
+      DBUG_ASSERT(rfield->decimals() == CFL_INDEX_TIMESTAMP_SCALE);
+      rowkey = cfl_row_get_key(cfl_field);
+      break;
+    }
+    field_length = cfl_field_length(*field, cfl_field);
+    //下一个字段（field）
+    cfl_field += field_length;
+  }
+
+  DBUG_ASSERT(rowkey != 0);
+  return rowkey;
 }

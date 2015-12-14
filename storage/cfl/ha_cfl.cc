@@ -83,8 +83,6 @@ static handler *cfl_create_handler(handlerton *hton,
                                    TABLE_SHARE *table, 
                                    MEM_ROOT *mem_root);
 
-#define CFL_INDEX_TIMESTAMP_NAME "key_timestamp"
-#define CFL_INDEX_TIMESTAMP_SCALE 6
 
 inline void
 cfl_isearch_init(cfl_isearch_t &isearch)
