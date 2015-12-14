@@ -1534,7 +1534,11 @@ ha_cfl::locate_next(bool &over)
   //比较该记录的key，是否符合isearch中比较的。如果不符合，则说明所有记录已经
   //完成获取。将cursor的position设置为CFL_CURSOR_AFTER_END
   bool matched = false;
-  cfl_dti_t rowkey = 0;
+  uint8_t *row;
+  uint32_t row_length;
+  row = cfl_cursor_row_get(cursor_);
+  row_length = cfl_cursor_row_length_get(cursor_);
+  cfl_dti_t rowkey = cfl_row_get_key_data(table->field, row, row_length);
   switch (isearch_.key_cmp)
   {
   case KEY_EQUAL:
