@@ -70,6 +70,7 @@ public:
 */
 struct cfl_isearch_struct
 {
+  bool located;
   cfl_dti_t key;
   enum cfl_key_cmp key_cmp;  
 };

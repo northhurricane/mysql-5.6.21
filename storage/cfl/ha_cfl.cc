@@ -1428,6 +1428,8 @@ int ha_cfl::locate_cursor()
   matched = cfl_table_->GetStorage()->LocateRow(isearch_.key
                                                 , isearch_.key_cmp
                                                 , cursor_);
+
+  isearch_.located = true;
   if (!matched)
   {
     cfl_cursor_position_set(cursor_, CFL_CURSOR_AFTER_END);
@@ -1441,28 +1443,29 @@ int ha_cfl::locate_cursor()
 int
 ha_cfl::locate_next(bool &over)
 {
-  //todo
-  uint32_t page_no;
-  uint32_t row_no;
+  uint32_t page_no;  //进行定位的页号
+  uint32_t row_no;   //进行定位的行号
+  uint32_t page_no_orig;  //当前的页号
+  uint32_t row_no_orig;   //当前的页号
   CflPage *page = NULL;
   int rc = 0;
-  
+
+  page_no_orig = cfl_cursor_page_no_get(cursor_);
+  row_no_orig  = cfl_cursor_row_no_get(cursor_);
+  /*
+    locate next必须是locate_cursor函数定位后，才能被调用
+    分为3种情况
+    1、还未进行next操作，此时cursor的postion为CFL_CURSOR_BEFOR_START。
+       由于在locate_cursor中定位到第一条数据，此时只需要根据cursor中的信息，
+       进行数据获取即可。
+    2、已经获取完最后一条数据，此时postion为CFL_CURSOR_AFTER_END。
+       直接返回表明结果获取结束。
+    3、获取下一条记录。此时cursor的postion记录的是上一条被获取的记录
+  */
   over = false;
   if (cfl_cursor_position_get(cursor_) == CFL_CURSOR_BEFOR_START)
   {
     /*情况1处理*/
-    page_no = 0;
-    row_no = 0;
-    page = CflPageManager::GetPage(cfl_table_->GetStorage(), page_no);
-    //尝试获取第一页，如果不存在，则设为CFL_CURSOR_AFTER_END
-    //todo : 也有可能页面不足。需要改进pagepool的调度算法
-    if (page == NULL)
-    {
-      over = true;
-      cfl_cursor_position_set(cursor_, CFL_CURSOR_AFTER_END);
-      return 0;
-    }
-    cfl_cursor_page_set(cursor_, page);
     cfl_cursor_position_set(cursor_, 1);
   }
   else if (cfl_cursor_position_get(cursor_) == CFL_CURSOR_AFTER_END)
@@ -1485,8 +1488,87 @@ ha_cfl::locate_next(bool &over)
   }
 
   //获取下一条记录
+  /*
+    有如下情况
+    1、在当前页找到数据.成功返回
+    2、记录可能在下一页。此时又存在两种情况
+      2-1、下一页存在。如果记录页存在，其中必有记录，next一定会获得一条记录
+      2-2、下一页不存在。说明已经完成所有记录的next，设置cursor状态为CFL_CURSOR_AFTER_END
+  */
+  DBUG_ASSERT(page != NULL);
+  void *buffer = page->page();
+  uint32_t row_count = cfl_page_read_row_count(buffer);
+  if (row_no < row_count)
+  {
+    //获取行
+    cfl_cursor_row_no_set(cursor_, row_no);
+  }
+  else
+  {
+    //行不在当前页，释放cursor当前的页，取得下一页
+    CflPageManager::PutPage(page);
+    page_no++;
+    row_no = 0;
+    page = CflPageManager::GetPage(cfl_table_->GetStorage(), page_no);
+    //后续页是否存在
+    if (page != NULL)
+    {
+      //获取数据
+      cfl_cursor_page_set(cursor_, page);
+      cfl_cursor_page_no_set(cursor_, page_no);
+      cfl_cursor_row_no_set(cursor_, row_no);
+    }
+    else
+    {
+      cfl_cursor_position_set(cursor_, CFL_CURSOR_AFTER_END);
+      cfl_cursor_page_no_set(cursor_, page_no_orig);
+      cfl_cursor_row_no_set(cursor_, row_no_orig);
+      over = true;
+    }
+  }
+
   //如果无法获取下一条记录返回over
-  //比较该记录的key
+  if (over)
+    return 0;
+
+  //比较该记录的key，是否符合isearch中比较的。如果不符合，则说明所有记录已经
+  //完成获取。将cursor的position设置为CFL_CURSOR_AFTER_END
+  bool matched = false;
+  cfl_dti_t rowkey = 0;
+  switch (isearch_.key_cmp)
+  {
+  case KEY_EQUAL:
+    if (rowkey != isearch_.key)
+      matched = false;
+    else
+      matched = true;
+    break;
+  case KEY_GE:
+  case KEY_G:
+    matched = true;
+    break;
+  case KEY_LE:
+    if (rowkey <= isearch_.key)
+      matched = true;
+    else
+      matched = false;
+    break;
+  case KEY_L:
+    if (rowkey < isearch_.key)
+      matched = true;
+    else
+      matched = false;
+    break;
+  }
+
+  if (!matched)
+  {
+    CflPageManager::PutPage(page);
+    cfl_cursor_position_set(cursor_, CFL_CURSOR_AFTER_END);
+    cfl_cursor_page_no_set(cursor_, page_no_orig);
+    cfl_cursor_row_no_set(cursor_, row_no_orig);
+  }
+
   return rc;
 }
 
