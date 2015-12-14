@@ -270,10 +270,12 @@ cfl_page_locate_row(void *page, Field ** fields
 
   cfl_dti_t row_key;
   bool found = false;
-  uint8_t *row = NULL;
+  uint8_t *row = cfl_page_nth_row((uint8_t*)page, mid - 1);
   row_key = cfl_row_get_key_data(fields, row);
   while (low + 1 < high)
   {
+    DBUG_ASSERT(mid < row_count);
+    row = cfl_page_nth_row((uint8_t*)page, mid - 1);
     if (row_key > key)
     {
       high = mid;
@@ -287,6 +289,7 @@ cfl_page_locate_row(void *page, Field ** fields
       found = true;
       break;
     }
+    mid = (low + high) / 2;
   }
 
   if (found)

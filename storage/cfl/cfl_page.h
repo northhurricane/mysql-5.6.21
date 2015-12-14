@@ -99,6 +99,38 @@ cfl_page_nth_row_offset(void *page, uint32_t nth)
   return nth_off;
 }
 
+/*
+  读取第nth个row的地址
+  nth:0-base
+*/
+inline uint8_t*
+cfl_page_nth_row(uint8_t *page, uint32_t nth)
+{
+  uint8_t  *nth_off;
+  uint8_t  *row;
+  uint32_t offset;
+
+  nth_off = cfl_page_nth_row_offset(page, nth);
+  offset = cfl_page_read_row_offset(nth_off);
+  row = page + offset;
+
+  return row;
+}
+
+/*
+  在页面内定位行。
+  参数：
+    row_no:1-based。返回值为true，指向定位到的数据；返回值为false，指向大于该记录的最小记录
+    
+  返回值：
+    true,找到等值的key
+    false,未找到等值的key
+  
+*/
+bool
+cfl_page_locate_row(void *page, Field **fields
+                    , cfl_dti_t key, uint32_t *row_no);
+
 class CflStorage;
 /*
   已排序的数据写入maker
@@ -211,19 +243,5 @@ private :
   CflPage *Dequeue();
   int Enqueue(CflPage *page);
 };
-
-/*
-  在页面内定位行。
-  参数：
-    row_no:1-based。返回值为true，指向定位到的数据；返回值为false，指向大于该记录的最小记录
-    
-  返回值：
-    true,找到等值的key
-    false,未找到等值的key
-  
-*/
-bool
-cfl_page_locate_row(void *page, Field **fields
-                    , cfl_dti_t key, uint32_t *row_no);
 
 #endif //_CFL_PAGE_H_
