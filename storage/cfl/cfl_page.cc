@@ -7,6 +7,7 @@
 #include "cfl.h"
 #include "cfl_page.h"
 #include "cfl_table.h"
+#include "cfl_row.h"
 
 CflPageMaker*
 CflPageMaker::Create()
@@ -252,8 +253,50 @@ CflPagePool::Enqueue(CflPage *page)
   return 0;
 }
 
-uint32_t
-cfl_page_locate_row(Field ** fields)
+bool
+cfl_page_locate_row(void *page, Field ** fields
+                    , cfl_dti_t key , uint32_t *row_no)
 {
-  return CFL_LOCATE_ROW_NULL;
+  //to do
+  uint32_t row_count;
+  uint32_t low, high;
+  uint32_t mid;
+
+  *row_no = CFL_LOCATE_ROW_NULL;
+
+  row_count = cfl_page_read_row_count(page);
+  low = 0; high = row_count;
+  mid = (low + high) / 2;
+
+  cfl_dti_t row_key;
+  bool found = false;
+  uint8_t *row = NULL;
+  row_key = cfl_row_get_key_data(fields, row);
+  while (low + 1 < high)
+  {
+    if (row_key > key)
+    {
+      high = mid;
+    }
+    else if (row_key < key)
+    {
+      low = mid;
+    }
+    else
+    {
+      found = true;
+      break;
+    }
+  }
+
+  if (found)
+  {
+    *row_no = mid;
+  }
+  else
+  {
+    *row_no = high;
+  }
+
+  return found;
 }

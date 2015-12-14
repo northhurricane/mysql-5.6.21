@@ -31,6 +31,6 @@ cfl_row_get_nth_field(Field ** fields, uint8_t *cfl_row, uint32_t row_length
                       , uint32_t nth_field, uint32_t *field_len);
 
 cfl_dti_t
-cfl_row_get_key_data(Field ** fields, uint8_t *cfl_row, uint32_t row_length);
+cfl_row_get_key_data(Field ** fields, uint8_t *cfl_row);
 
 #endif //_CFL_ROW_H_

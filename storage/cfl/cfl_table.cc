@@ -93,7 +93,7 @@ CflStorage::LocatePage(cfl_dti_t key, enum cfl_key_cmp keycmp)
 
 bool
 CflStorage::LocateRow(cfl_dti_t key, enum cfl_key_cmp keycmp
-                      , cfl_cursor_t &cursor)
+                      , cfl_cursor_t &cursor, Field **fields)
 {
   cursor.page_no = CFL_LOCATE_PAGE_NULL;
   cursor.row_no = CFL_LOCATE_ROW_NULL;
@@ -123,6 +123,8 @@ CflStorage::LocateRow(cfl_dti_t key, enum cfl_key_cmp keycmp
   uint32_t row_no_curr = row_no_found; //1-based。
   uint32_t row_no_prev = CFL_LOCATE_ROW_NULL; //1-based
   uint32_t row_no_next = CFL_LOCATE_ROW_NULL; //1-based
+  found = cfl_page_locate_row(page_data, fields, key, &row_no);
+
   if (found)
   {
     cfl_dti_t row_key;

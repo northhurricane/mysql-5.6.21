@@ -62,7 +62,7 @@ public :
         KEY_L    ，返回小于key的最后一条记录
   */
   bool LocateRow(cfl_dti_t key, enum cfl_key_cmp keycmp
-                 , cfl_cursor_t &cursor);
+                 , cfl_cursor_t &cursor, Field **fields);
 
 private :
   CflIndex *index_;

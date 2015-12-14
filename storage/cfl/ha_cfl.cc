@@ -1423,9 +1423,9 @@ int ha_cfl::locate_cursor()
   DBUG_ASSERT(cfl_cursor_position_get(cursor_) == CFL_CURSOR_BEFOR_START);
 
   bool matched = false;
-  matched = cfl_table_->GetStorage()->LocateRow(isearch_.key
-                                                , isearch_.key_cmp
-                                                , cursor_);
+  CflStorage *storage = cfl_table_->GetStorage();
+  matched = storage->LocateRow(isearch_.key , isearch_.key_cmp
+                               , cursor_, table->field);
 
   isearch_.located = true;
   if (!matched)
@@ -1535,8 +1535,7 @@ ha_cfl::locate_next(bool &over)
   uint8_t *row;
   uint32_t row_length;
   row = cfl_cursor_row_get(cursor_);
-  row_length = cfl_cursor_row_length_get(cursor_);
-  cfl_dti_t rowkey = cfl_row_get_key_data(table->field, row, row_length);
+  cfl_dti_t rowkey = cfl_row_get_key_data(table->field, row);
   switch (isearch_.key_cmp)
   {
   case KEY_EQUAL:

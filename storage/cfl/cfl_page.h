@@ -175,7 +175,7 @@ public :
   /*
     从存储中获取页
     参数：
-      nth_page
+      nth_page:
   */
   static CflPage* GetPage(CflStorage *storage, uint32_t nth_page);
   /*将数据页归还*/
@@ -223,7 +223,7 @@ private :
   
 */
 bool
-cfl_page_locate_row(void *page, Field ** fields, cfl_dti_t key
-                    , uint32_t *row_no);
+cfl_page_locate_row(void *page, Field **fields
+                    , cfl_dti_t key, uint32_t *row_no);
 
 #endif //_CFL_PAGE_H_

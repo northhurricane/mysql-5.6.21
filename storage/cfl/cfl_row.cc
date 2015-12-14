@@ -331,7 +331,7 @@ cfl_row_get_nth_field(Field ** fields, uint8_t *cfl_row, uint32_t row_length
 }
 
 cfl_dti_t
-cfl_row_get_key_data(Field **fields, uint8_t *cfl_row, uint32_t row_length)
+cfl_row_get_key_data(Field **fields, uint8_t *cfl_row)
 {
   uint8_t *cfl_field = cfl_row;
   int field_length = 0;
