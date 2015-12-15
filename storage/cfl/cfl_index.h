@@ -74,11 +74,19 @@ private :
     return cfl_s2dti(nth_node);
     //    return endian_read_uint64(nth_node);
   }
+  /*
+    nth:0-based
+  */
   int WriteNthIndexNode(uint32_t nth, cfl_dti_t dti)
   {
-    uint8_t *nth_node = buffer_ + CFL_INDEX_HEAD_TAIL
-                               + nth * CFL_DTI_STORAGE_SIZE;
+    //写入缓冲区
+    uint64_t offset = CFL_INDEX_HEAD_TAIL + nth * CFL_DTI_STORAGE_SIZE;
+    uint8_t *nth_node = buffer_ + offset;
     cfl_dti2s(dti, nth_node);
+    //写入文件
+    int r = cf_write(&cf_file_, offset, nth_node, CFL_INDEX_HEAD_FIX_SIZE);
+    if (r < 0)
+      return -1;
     return 0;
   }
 

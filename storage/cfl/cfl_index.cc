@@ -16,8 +16,8 @@ CflIndex::AddPage(cfl_dti_t dti)
 {
   //写入index node
   WriteNthIndexNode(node_count_, dti);
+  //页面数目发生变化，写入头数据
   IncrNodeCount();
-  //写入头数据
   WriteHead();
   return 0;
 }
