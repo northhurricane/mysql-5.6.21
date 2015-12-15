@@ -134,14 +134,14 @@ inline bool cfl_dt_valid(const cfl_dt_t *dt)
   return true;
 }
 
+/*struct tm中 year，month*/
 #define TM_BASE_YEAR (1900)
 #define TM_BASE_MONTH (1)
-#define TM_BASE_DAY (1)
 inline void cfl_tm2cdt(cfl_dt_t &cdt, struct tm *dt)
 {
   cdt.year = TM_BASE_YEAR + dt->tm_year;
   cdt.month = TM_BASE_MONTH + dt->tm_mon;
-  cdt.day = TM_BASE_DAY + dt->tm_mday;
+  cdt.day = dt->tm_mday;
   cdt.hour = dt->tm_hour;
   cdt.minute = dt->tm_min;
   cdt.second = dt->tm_sec;

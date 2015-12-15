@@ -42,10 +42,6 @@ public :
   int ReadPage(void *buffer, uint32_t buffer_size, uint32_t nth_page);
 
   /*
-    定位页面
-  */
-  uint32_t LocatePage(cfl_dti_t dti, enum cfl_key_cmp keycmp);
-  /*
     定位记录
     返回值：
       true :定位到满足条件的记录

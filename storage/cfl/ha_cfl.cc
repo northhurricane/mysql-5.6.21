@@ -1285,6 +1285,7 @@ ha_cfl::index_init(uint idx, bool sorted)
   DBUG_ASSERT(idx == 0);
   active_index= idx;
   cfl_isearch_init(isearch_);
+  cfl_cursor_init(cursor_);
 
   DBUG_RETURN(0);
 }

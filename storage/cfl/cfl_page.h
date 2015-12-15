@@ -48,6 +48,9 @@ rows index
 #define CFL_PAGE_FIX_SPACE_SIZE (CFL_PAGE_MAGIC_HEAD_SIZE + \
                                  CFL_PAGE_MAGIC_TAIL_SIZE + CFL_PAGE_HEAD_SIZE)
 
+/*
+  写入行数
+*/
 inline void
 cfl_page_write_row_count(void *page, uint32_t row_count)
 {
@@ -57,6 +60,9 @@ cfl_page_write_row_count(void *page, uint32_t row_count)
   endian_write_uint32(pos, row_count);
 }
 
+/*
+  读取行数
+*/
 inline uint32_t
 cfl_page_read_row_count(void *page)
 {
@@ -66,6 +72,9 @@ cfl_page_read_row_count(void *page)
   return endian_read_uint32(pos);
 }
 
+/*
+  写入偏移
+*/
 inline void
 cfl_page_write_row_offset(uint8_t *addr, uint32_t v)
 {
@@ -74,6 +83,9 @@ cfl_page_write_row_offset(uint8_t *addr, uint32_t v)
   addr[2] = (uint8_t)((v & 0xFF0000) >> 8);
 }
 
+/*
+  读取偏移
+*/
 inline uint32_t
 cfl_page_read_row_offset(uint8_t *addr)
 {

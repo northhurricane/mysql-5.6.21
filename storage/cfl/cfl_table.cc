@@ -85,12 +85,6 @@ CflStorage::Deinitialize()
   return 0;
 }
 
-uint32_t
-CflStorage::LocatePage(cfl_dti_t key, enum cfl_key_cmp keycmp)
-{
-  return index_->LocatePage(key, keycmp);
-}
-
 bool
 CflStorage::LocateRow(cfl_dti_t key, enum cfl_key_cmp keycmp
                       , cfl_cursor_t &cursor, Field **fields)
