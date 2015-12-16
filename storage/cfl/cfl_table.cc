@@ -104,21 +104,23 @@ CflStorage::LocateRow(cfl_dti_t key, enum cfl_key_cmp keycmp
   }
 
   CflPage *page = NULL;
+  uint8_t *page_data = NULL;
   page = CflPageManager::GetPage(this, page_no);
+  page_data = (uint8_t*)page->page();
 
   //在页中定位行
   bool found = false;   //是否在页面内定位到数据
-  void *page_data = NULL;
   uint32_t row_no_found = 0; //1-based。便于等值时代码编写，使用该计数。基于
                              //该变量的变量，row_no_curr等也是如此
-  uint32_t row_count;        //当前页的行数
+  found = cfl_page_locate_row(page_data, fields, key, &row_no_found);
 
   //基于row_no_found进行row定位的变量
   uint32_t row_no_curr = row_no_found; //1-based。
   uint32_t row_no_prev = CFL_LOCATE_ROW_NULL; //1-based
   uint32_t row_no_next = CFL_LOCATE_ROW_NULL; //1-based
-  found = cfl_page_locate_row(page_data, fields, key, &row_no);
 
+  uint32_t row_count;        //当前页的行数
+  row_count = cfl_page_read_row_count(page_data);
   if (found)
   {
     cfl_dti_t row_key;
@@ -130,14 +132,14 @@ CflStorage::LocateRow(cfl_dti_t key, enum cfl_key_cmp keycmp
       //向前遍历，定位等于该key的第一个记录
       row_no_next = row_no_curr;
       row_no_curr--;
-      row_key = 0; //根据row_no_curr获取当前row的key
+      //根据row_no_curr获取当前row的key
       while (row_no_curr > 0)
       {
+        row_key = cfl_page_nth_row_key(page_data, row_no_curr - 1, fields);
         if (row_key < key)
           break;
         row_no_next = row_no_curr;
         row_no_curr--;
-        row_key = 0;
       }
       row_no = row_no_next - 1;
       break;
@@ -149,14 +151,13 @@ CflStorage::LocateRow(cfl_dti_t key, enum cfl_key_cmp keycmp
       //定位记录
       row_no_prev = row_no_curr;
       row_no_curr++;
-      row_key = 0;
       while (row_no_curr < row_count)
       {
+        row_key = cfl_page_nth_row_key(page_data, row_no_curr - 1, fields);
         if (row_key > key)
           break;
         row_no_prev = row_no_curr;
         row_no_curr++;
-        row_key = 0;
       }
       row_no = row_no_curr - 1;
       break;
@@ -167,14 +168,13 @@ CflStorage::LocateRow(cfl_dti_t key, enum cfl_key_cmp keycmp
       //向后遍历，定位等于该key的记录最后一条记录
       row_no_prev = row_no_curr;
       row_no_curr++;
-      row_key = 0;
       while (row_no_curr < row_count)
       {
+        row_key = cfl_page_nth_row_key(page_data, row_no_curr - 1, fields);
         if (row_key > key)
           break;
         row_no_prev = row_no_curr;
         row_no_curr++;
-        row_key = 0;
       }
       row_no = row_no_prev - 1;
       break;
@@ -185,14 +185,13 @@ CflStorage::LocateRow(cfl_dti_t key, enum cfl_key_cmp keycmp
       //如果不在当前页，则必然在前一页。如果前一页不存在，则无满足条件记录
       row_no_next = row_no_curr;
       row_no_curr--;
-      row_key = 0; //获取当前key
       while (row_no_curr > 0)
       {
+        row_key = cfl_page_nth_row_key(page_data, row_no_curr - 1, fields);
         if (row_key < key)
           break;
         row_no_next = row_no_curr;
         row_no_curr--;
-        row_key = 0;
       }
       if (row_no_curr == 0)
       {
@@ -250,7 +249,7 @@ CflStorage::LocateRow(cfl_dti_t key, enum cfl_key_cmp keycmp
         {
           page_no--;
           page = CflPageManager::GetPage(this, page_no);
-          page_data = page->page();
+          page_data = (uint8_t*)page->page();
           row_count = cfl_page_read_row_count(page_data);
           row_no = row_count - 1;
         }

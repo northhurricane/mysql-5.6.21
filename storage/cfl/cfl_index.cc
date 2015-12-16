@@ -157,6 +157,7 @@ CflIndex::LocatePage(cfl_dti_t key, cfl_key_cmp key_cmp)
       found = true;
       break;
     }
+    mid = (low + high) / 2;
   }
 
   uint32_t page_no = CFL_LOCATE_PAGE_NULL; //1-based

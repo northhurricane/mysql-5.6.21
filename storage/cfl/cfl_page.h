@@ -7,6 +7,7 @@
 #include "cfl_endian.h"
 #include "cfl_dt.h"
 #include <field.h>
+#include "cfl_row.h"
 
 using namespace std;
 /*
@@ -116,17 +117,28 @@ cfl_page_nth_row_offset(void *page, uint32_t nth)
   nth:0-base
 */
 inline uint8_t*
-cfl_page_nth_row(uint8_t *page, uint32_t nth)
+cfl_page_nth_row(uint8_t *page_data, uint32_t nth)
 {
   uint8_t  *nth_off;
   uint8_t  *row;
   uint32_t offset;
 
-  nth_off = cfl_page_nth_row_offset(page, nth);
+  nth_off = cfl_page_nth_row_offset(page_data, nth);
   offset = cfl_page_read_row_offset(nth_off);
-  row = page + offset;
+  row = page_data + offset;
 
   return row;
+}
+
+/*
+  读取第nth个row的地址
+  nth:0-base
+*/
+inline cfl_dti_t
+cfl_page_nth_row_key(uint8_t *page_data, uint32_t nth, Field **fields)
+{
+  uint8_t *row = cfl_page_nth_row(page_data, nth);
+  return cfl_row_get_key_data(fields, row);
 }
 
 /*
