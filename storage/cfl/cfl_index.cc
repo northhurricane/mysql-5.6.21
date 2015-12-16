@@ -264,7 +264,7 @@ CflIndex::LocatePage(cfl_dti_t key, cfl_key_cmp key_cmp)
     }
   }
 
-  return page_no;
+  return page_no - 1;
 }
 
 

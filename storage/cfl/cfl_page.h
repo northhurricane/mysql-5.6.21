@@ -144,7 +144,7 @@ cfl_page_nth_row_key(uint8_t *page_data, uint32_t nth, Field **fields)
 /*
   在页面内定位行。
   参数：
-    row_no:1-based。返回值为true，指向定位到的数据；返回值为false，指向大于该记录的最小记录
+    row_no:0-based。返回值为true，指向定位到的数据；返回值为false，指向大于该记录的最小记录
     
   返回值：
     true,找到等值的key

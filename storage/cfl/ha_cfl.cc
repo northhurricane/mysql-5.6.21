@@ -1466,6 +1466,7 @@ ha_cfl::locate_next(bool &over)
   {
     /*情况1处理*/
     cfl_cursor_position_set(cursor_, 1);
+    page = cfl_cursor_page_get(cursor_);
   }
   else if (cfl_cursor_position_get(cursor_) == CFL_CURSOR_AFTER_END)
   {
