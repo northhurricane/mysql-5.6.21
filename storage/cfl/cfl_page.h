@@ -142,6 +142,35 @@ cfl_page_nth_row_key(uint8_t *page_data, uint32_t nth, Field **fields)
 }
 
 /*
+  获取第nth个row的地址
+  返回值
+    返回行长度
+    0表示不存在该行
+  参数
+    nth:0-based
+*/
+inline uint32_t
+cfl_page_nth_row_length(uint8_t * page_data, uint32_t nth)
+{
+  uint8_t  *nth_off;
+  uint32_t row_count;
+
+  row_count = cfl_page_read_row_count(page_data);
+  if (nth >= row_count)
+    return 0;
+
+  uint32_t offset;
+  nth_off = cfl_page_nth_row_offset(page_data, nth);
+  offset = cfl_page_read_row_offset(nth_off);
+
+  uint32_t offset_next;
+  nth_off = cfl_page_nth_row_offset(page_data, nth + 1);
+  offset_next = cfl_page_read_row_offset(nth_off);
+
+  return offset_next - offset;
+}
+
+/*
   在页面内定位行。
   参数：
     row_no:0-based。返回值为true，指向定位到的数据；返回值为false，指向大于该记录的最小记录

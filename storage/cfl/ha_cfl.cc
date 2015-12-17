@@ -1351,6 +1351,27 @@ ha_cfl::index_next(uchar *buf)
       rc= HA_ERR_END_OF_FILE;
       MYSQL_READ_ROW_DONE(rc);
     }
+    else
+    {
+      //获取cfl的记录数据
+      uint32_t row_length = 0;
+      uint8_t *row = NULL;
+
+      my_bitmap_map *org_bitmap;
+      bool read_all;
+      /* We must read all columns in case a table is opened for update */
+      read_all= !bitmap_is_clear_all(table->write_set);
+      /* Avoid asserts in ::store() for columns that are not going to be updated */
+      org_bitmap= dbug_tmp_use_all_columns(table, table->write_set);
+
+      memset(buf, 0, table->s->null_bytes);
+      row = cfl_cursor_row_get(cursor_);
+      row_length = cfl_cursor_row_length_get(cursor_);
+      //将cfl的记录数据转换为mysql的记录
+      cfl_row_to_mysql(table->field, buf, NULL, row, row_length);
+
+      dbug_tmp_restore_column_map(table->write_set, org_bitmap);
+    }
   }
 
   DBUG_RETURN(rc);
@@ -1447,10 +1468,8 @@ ha_cfl::locate_next(bool &over)
   uint32_t page_no_orig;  //当前的页号
   uint32_t row_no_orig;   //当前的页号
   CflPage *page = NULL;
+  uint64_t position = 0;
   int rc = 0;
-
-  page_no_orig = cfl_cursor_page_no_get(cursor_);
-  row_no_orig  = cfl_cursor_row_no_get(cursor_);
   /*
     locate next必须是locate_cursor函数定位后，才能被调用
     分为3种情况
@@ -1461,12 +1480,16 @@ ha_cfl::locate_next(bool &over)
        直接返回表明结果获取结束。
     3、获取下一条记录。此时cursor的postion记录的是上一条被获取的记录
   */
+  page_no = cfl_cursor_page_no_get(cursor_);
+  row_no = cfl_cursor_row_no_get(cursor_);
+  page_no_orig = page_no;
+  row_no_orig  = row_no;
+
   over = false;
   if (cfl_cursor_position_get(cursor_) == CFL_CURSOR_BEFOR_START)
   {
     /*情况1处理*/
-    cfl_cursor_position_set(cursor_, 1);
-    page = cfl_cursor_page_get(cursor_);
+    position = 1;
   }
   else if (cfl_cursor_position_get(cursor_) == CFL_CURSOR_AFTER_END)
   {
@@ -1478,32 +1501,26 @@ ha_cfl::locate_next(bool &over)
   {
     /*情况3处理*/
     //获取下一条记录的位置信息
-    page_no = cfl_cursor_page_no_get(cursor_);
-    page = cfl_cursor_page_get(cursor_);
-    row_no = cfl_cursor_row_no_get(cursor_);
     row_no++;
-    uint64_t curpos = cfl_cursor_position_get(cursor_);
-    curpos++;
-    cfl_cursor_position_set(cursor_, curpos);
+    position = cfl_cursor_position_get(cursor_);
+    position++;
   }
 
   //获取下一条记录
   /*
     有如下情况
-    1、在当前页找到数据.成功返回
+    1、记录
     2、记录可能在下一页。此时又存在两种情况
       2-1、下一页存在。如果记录页存在，其中必有记录，next一定会获得一条记录
       2-2、下一页不存在。说明已经完成所有记录的next，设置cursor状态为CFL_CURSOR_AFTER_END
   */
+  page = cfl_cursor_page_get(cursor_);
   DBUG_ASSERT(page != NULL);
-  void *buffer = page->page();
-  uint32_t row_count = cfl_page_read_row_count(buffer);
-  if (row_no < row_count)
-  {
-    //获取行
-    cfl_cursor_row_no_set(cursor_, row_no);
-  }
-  else
+  void *page_data = page->page();
+  uint32_t row_count = cfl_page_read_row_count(page_data);
+  uint8_t *row;
+  uint32_t row_length;
+  if (row_no >= row_count)
   {
     //行不在当前页，释放cursor当前的页，取得下一页
     CflPageManager::PutPage(page);
@@ -1511,68 +1528,85 @@ ha_cfl::locate_next(bool &over)
     row_no = 0;
     page = CflPageManager::GetPage(cfl_table_->GetStorage(), page_no);
     //后续页是否存在
-    if (page != NULL)
+    if (page == NULL)
     {
-      //获取数据
-      cfl_cursor_page_set(cursor_, page);
-      cfl_cursor_page_no_set(cursor_, page_no);
-      cfl_cursor_row_no_set(cursor_, row_no);
-    }
-    else
-    {
-      cfl_cursor_position_set(cursor_, CFL_CURSOR_AFTER_END);
-      cfl_cursor_page_no_set(cursor_, page_no_orig);
-      cfl_cursor_row_no_set(cursor_, row_no_orig);
       over = true;
     }
+    else
+    {
+      page_data = page->page();
+    }
   }
 
-  //如果无法获取下一条记录返回over
   if (over)
-    return 0;
-
-  //比较该记录的key，是否符合isearch中比较的。如果不符合，则说明所有记录已经
-  //完成获取。将cursor的position设置为CFL_CURSOR_AFTER_END
-  bool matched = false;
-  uint8_t *row;
-  uint32_t row_length;
-  row = cfl_cursor_row_get(cursor_);
-  cfl_dti_t rowkey = cfl_row_get_key_data(table->field, row);
-  switch (isearch_.key_cmp)
   {
-  case KEY_EQUAL:
-    if (rowkey != isearch_.key)
-      matched = false;
-    else
-      matched = true;
-    break;
-  case KEY_GE:
-  case KEY_G:
-    matched = true;
-    break;
-  case KEY_LE:
-    if (rowkey <= isearch_.key)
-      matched = true;
-    else
-      matched = false;
-    break;
-  case KEY_L:
-    if (rowkey < isearch_.key)
-      matched = true;
-    else
-      matched = false;
-    break;
+    //无法获取下一条记录
+    goto index_next_over;
   }
-
-  if (!matched)
+  else
   {
-    CflPageManager::PutPage(page);
-    cfl_cursor_position_set(cursor_, CFL_CURSOR_AFTER_END);
-    cfl_cursor_page_no_set(cursor_, page_no_orig);
-    cfl_cursor_row_no_set(cursor_, row_no_orig);
-  }
+    //获取
+    //比较该记录的key，是否符合isearch中比较的。如果不符合，则说明所有记录已经
+    //完成获取。将cursor的position设置为CFL_CURSOR_AFTER_END
+    bool matched;
+    cfl_dti_t rowkey = 0;
+    DBUG_ASSERT(page != NULL);
+    DBUG_ASSERT(page_data != NULL);
+    row = cfl_page_nth_row((uint8_t*)page_data, row_no);
+    DBUG_ASSERT(row != NULL);
+    rowkey = cfl_row_get_key_data(table->field, row);
+    switch (isearch_.key_cmp)
+    {
+    case KEY_EQUAL:
+      if (rowkey != isearch_.key)
+        matched = false;
+      else
+        matched = true;
+      break;
+    case KEY_GE:
+    case KEY_G:
+      matched = true;
+      break;
+    case KEY_LE:
+      if (rowkey <= isearch_.key)
+        matched = true;
+      else
+        matched = false;
+      break;
+    case KEY_L:
+      if (rowkey < isearch_.key)
+        matched = true;
+      else
+        matched = false;
+      break;
+    default:
+      DBUG_ASSERT(false);
+    }
+    if (!matched)
+      goto index_next_over;
 
+  }
+  //当前page_no和row_no为所要选找的记录
+  row_length = cfl_page_nth_row_length((uint8_t*)page_data, row_no);
+
+  cfl_cursor_page_set(cursor_, page);
+  cfl_cursor_page_no_set(cursor_, page_no);
+  cfl_cursor_row_no_set(cursor_, row_no);
+  cfl_cursor_row_set(cursor_, row);
+  cfl_cursor_row_length_set(cursor_, row_length);
+  cfl_cursor_position_set(cursor_, position);
   return rc;
+
+  //所有满足条件的记录已获取。不再有满足条件的记录
+index_next_over :
+  if (page != NULL)
+    CflPageManager::PutPage(page);
+  cfl_cursor_page_set(cursor_, NULL);
+  cfl_cursor_page_no_set(cursor_, page_no_orig);
+  cfl_cursor_row_no_set(cursor_, row_no_orig);
+  cfl_cursor_position_set(cursor_, CFL_CURSOR_AFTER_END);
+
+  return 0;
 }
 
 void
