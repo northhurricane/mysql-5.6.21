@@ -9,4 +9,12 @@ readme:项目说明
 CMakeLists.txt:编译文件
 ha_cfl.h:cfl的引擎接口头文件
 ha_cfl.cc:cfl的引擎接口实现文件
-
+cfl_row.h/cfl_row.cc:行数据相关
+cfl_table.h/cfl_table.cc:cfl表对象
+cfl_data.h/cfl_data.cc:存储数据的操作接口
+cfl_index.h/cfl_index.cc:存储索引的操作接口
+cfl_file.h/cfl_file.cc:文件操作接口
+cfl_endian.h:跨平台的数据读写
+cfl_insert_buffer.h/cfl_insert_buffer.cc:插入缓冲区管理
+cfl_page.h/cfl_page.cc:页面管理
+cfl_buffer.h/cfl_buffer.cc:缓冲区管理

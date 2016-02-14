@@ -32,13 +32,13 @@ rows index
   为了便于计算行的长度，最后一个index写入的是一个虚拟的行偏移，也就是最后一行的结尾
 */
 
-#define CFL_PAGE_SIZE (1024 * 1024)
+#define CFL_PAGE_SIZE (64 * 1024)
 
 #define CFL_PAGE_HEAD_SIZE (16)
 #define CFL_PAGE_HEAD (0)
 #define CFL_PAGE_ROW_COUNT (CFL_PAGE_HEAD)
 
-#define CFL_PAGE_ROW_POS_SIZE (3)
+#define CFL_PAGE_ROW_POS_SIZE (2)
 
 #define CFL_PAGE_MAGIC_HEAD (0XAC81FD7321CA92FB)
 #define CFL_PAGE_MAGIC_TAIL (0XC725ADFE6420CB63)
@@ -81,7 +81,7 @@ cfl_page_write_row_offset(uint8_t *addr, uint32_t v)
 {
   addr[0] = (uint8_t)(v & 0xFF);
   addr[1] = (uint8_t)((v & 0xFF00) >> 8);
-  addr[2] = (uint8_t)((v & 0xFF0000) >> 8);
+  //addr[2] = (uint8_t)((v & 0xFF0000) >> 8);
 }
 
 /*
@@ -90,12 +90,12 @@ cfl_page_write_row_offset(uint8_t *addr, uint32_t v)
 inline uint32_t
 cfl_page_read_row_offset(uint8_t *addr)
 {
-  uint32_t byte1, byte2, byte3 = 0;
+  uint32_t byte1 = 0, byte2 = 0;//, byte3 = 0;
   byte1 = addr[0];
   byte2 = addr[1] << 8;
-  byte3 = addr[2] << 16;
+  //byte3 = addr[2] << 16;
 
-  uint32_t temp = byte1 | byte2 | byte3;
+  uint32_t temp = byte1 | byte2;// | byte3;
   return temp;
 }
 
