@@ -79,6 +79,14 @@ CflIndex::Create(const char *name)
     return NULL;
   }
   index->buffer_ = (uint8_t*)malloc(CFL_INDEX_BUFFER_INIT_SIZE);
+  if (index->buffer_ == NULL)
+  {
+    cf_close(&index->cf_file_);
+    delete index;
+    return NULL;
+  }
+
+  memset(index->buffer_, 0, CFL_INDEX_BUFFER_INIT_SIZE);
   index->buffer_size_ = CFL_INDEX_BUFFER_INIT_SIZE;
 
   r = cf_read(&index->cf_file_, 0, index->buffer_
