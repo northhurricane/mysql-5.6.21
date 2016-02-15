@@ -363,8 +363,8 @@ CflTable::PageOverflow(uint16_t row_size)
   uint32_t total_size = CFL_PAGE_FIX_SPACE_SIZE + total_rows_size + index_size;
 
   //测试用
-  if (total_size > 80)
-    return true;
+  /*if (total_size > 80)
+    return true;*/
 
   if (total_size > CFL_PAGE_SIZE)
     return true;
