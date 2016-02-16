@@ -4,6 +4,9 @@
 #include "cfl_insert_buffer.h"
 #include "cfl_page.h"
 
+#include <map>
+using namespace std;
+
 /*CflStorage*/
 int
 CflStorage::WritePage(void *page, uint32_t rows_count, cfl_dti_t dti)
@@ -283,6 +286,85 @@ not_found:
   
 }
 
+/*
+CflTableInstanceManager
+*/
+/*
+用于管理CflTable的实例，在运行过程中，只能有一个指向文件句柄的CflTable的实例存在
+*/
+typedef map<string , CflTable*>  table_map_t;
+typedef table_map_t::iterator  table_map_it_t;
+
+class CflTableInstanceManager
+{
+public :
+  CflTable* Create(const char *name);
+  int Destroy(CflTable *table);
+  CflTableInstanceManager();
+  ~CflTableInstanceManager();
+
+private :
+  mysql_mutex_t table_map_mutex_;
+  table_map_t table_map_;
+};
+
+CflTableInstanceManager::CflTableInstanceManager()
+{
+  mysql_mutex_init(NULL, &table_map_mutex_, MY_MUTEX_INIT_FAST);
+}
+
+CflTableInstanceManager::~CflTableInstanceManager()
+{
+  mysql_mutex_destroy(&table_map_mutex_);
+}
+
+static CflTableInstanceManager table_manager;
+
+CflTable* CflTableInstanceManager::Create(const char *name)
+{
+  string str_name = name;
+  CflTable *table = NULL;
+
+  mysql_mutex_lock(&table_map_mutex_);
+  table_map_it_t it = table_map_.find(str_name);
+  if (it == table_map_.end())
+  {
+    table = CflTable::CreateInstance(name);
+    if (table != NULL)
+    {
+      table_map_[str_name] = table;
+      table->IncRefCount();
+    }
+  }
+  else
+  {
+    table = it->second;
+    table->IncRefCount();
+    //table = table_map_[str_name];
+  }
+  mysql_mutex_unlock(&table_map_mutex_);
+
+  return table;
+}
+
+int CflTableInstanceManager::Destroy(CflTable *table)
+{
+  int r = 0;
+  mysql_mutex_lock(&table_map_mutex_);
+  const string &str_name = table->GetTableName();
+  table_map_it_t it = table_map_.find(str_name);
+  DBUG_ASSERT(it != table_map_.end());
+  CflTable *table_find = it->second;
+  uint32_t ref_count = table->DecRefCount();
+  if (ref_count == 0)
+  {
+    table_map_.erase(it);
+    r = CflTable::DestroyInstance(table);
+  }
+  mysql_mutex_unlock(&table_map_mutex_);
+  return r;
+}
+
 /*CflTable*/
 int
 CflTable::CreateStorage(const char *name)
@@ -299,10 +381,28 @@ CflTable::DestroyStorage(const char *name)
 CflTable*
 CflTable::Create(const char *name)
 {
+  return table_manager.Create(name);
+}
+
+int
+CflTable::Destroy(CflTable *table)
+{
+  DBUG_ASSERT(table != NULL);
+  return table_manager.Destroy(table);
+}
+
+CflTable*
+CflTable::CreateInstance(const char *name)
+{
   CflTable *table = new CflTable();
+  if (table == NULL)
+    return NULL;
+
+  table->table_name_ = name;
   int r = table->Initialize(name);
   if (r < 0)
   {
+    delete table;
     return NULL;
   }
 
@@ -310,7 +410,7 @@ CflTable::Create(const char *name)
 }
 
 int
-CflTable::Destroy(CflTable *table)
+CflTable::DestroyInstance(CflTable *table)
 {
   DBUG_ASSERT(table != NULL);
 
@@ -320,7 +420,7 @@ CflTable::Destroy(CflTable *table)
   return 0;
 }
 
-CflTable*
+/*CflTable*
 CflTable::Open()
 {
   return 0;
@@ -330,7 +430,7 @@ int
 CflTable::Close()
 {
   return 0;
-}
+}*/
 
 void
 CflTable::Insert(cfl_dti_t key, void *row, uint16_t row_size)

@@ -6,7 +6,9 @@
 #include "cfl_page.h"
 #include "cfl.h"
 #include "cfl_cursor.h"
+#include <string>
 
+using namespace std;
 /*
 每个CflTable对象对应一个cfl引擎的表，该对象用来组织cfl表的存储
 存储设计概要
@@ -83,8 +85,8 @@ public :
 
   static CflTable* Create(const char *name);
   static int Destroy(CflTable *table);
-  static CflTable* Open();
-  static int Close();
+  /*static CflTable* Open();
+    static int Close();*/
 
 public :
   void Insert(cfl_dti_t key, void *row, uint16_t row_size);
@@ -102,14 +104,28 @@ private :
   /*插入缓冲区保护，在进行行插入时保护插入缓冲区*/
   mysql_mutex_t insert_buffer_mutex_;
 
+protected :
+  static CflTable* CreateInstance(const char *name);
+  static int DestroyInstance(CflTable *table);
+
+  string table_name_;
+  const string &GetTableName() { return table_name_; }
+
+  uint32_t ref_count_;
+  uint32_t GetRefCount() { return ref_count_; }
+  uint32_t IncRefCount() { ref_count_++; return GetRefCount(); }
+  uint32_t DecRefCount() { ref_count_--; return GetRefCount(); }
 private :
   bool PageOverflow(uint16_t row_size);
   CflTable() {
     insert_buffer_ = NULL;
     maker_ = NULL;
     storage_ = NULL;
+    ref_count_ = 0;
   }
   ~CflTable() {}
+
+  friend class CflTableInstanceManager;
 };
 
 
