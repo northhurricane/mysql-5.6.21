@@ -198,14 +198,29 @@ Cfl_share::Cfl_share()
                    &mutex, MY_MUTEX_INIT_FAST);
 }
 
+int cfl_discover(handlerton *hton, THD* thd, const char *db, 
+                 const char *name, uchar **frmblob, size_t *frmlen)
+{
+  //什么事情都不做，测试HTON_CAN_RECREATE
+  int i = 0;
+  printf("%s", name);
+  i++;
+  return i;
+}
+
+
 static int
 cfl_init_handlerton(handlerton *cfl_ton)
 {
-  cfl_ton->state=                     SHOW_OPTION_YES;
-  cfl_ton->create=                    cfl_create_handler;
-  cfl_ton->flags=                     HTON_CAN_RECREATE;
-  cfl_ton->system_database=   cfl_system_database;
+  cfl_ton->state=           SHOW_OPTION_YES;
+  cfl_ton->create=          cfl_create_handler;
+  //flags设置说明:
+  //设置HTON_CAN_RECREATE，将不会调用ha_cfl::truncate
+  cfl_ton->flags=           0;
+  cfl_ton->system_database= cfl_system_database;
   cfl_ton->is_supported_system_table= cfl_is_supported_system_table;
+
+  //cfl_ton->discover = cfl_discover;  //配合HTON_CAN_RECREATE测试
 
   return 0;
 }
