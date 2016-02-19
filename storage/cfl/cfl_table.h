@@ -91,6 +91,16 @@ public :
 public :
   void Insert(cfl_dti_t key, void *row, uint16_t row_size);
   int Truncate();
+  int Lock()
+  {
+    mysql_mutex_lock(&insert_buffer_mutex_);
+    return 0;
+  }
+  int Unlock()
+  {
+    mysql_mutex_unlock(&insert_buffer_mutex_);
+    return 0;
+  }
 
   CflStorage *GetStorage() { return storage_; }
 

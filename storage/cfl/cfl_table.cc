@@ -354,7 +354,10 @@ int CflTableInstanceManager::Destroy(CflTable *table)
   const string &str_name = table->GetTableName();
   table_map_it_t it = table_map_.find(str_name);
   DBUG_ASSERT(it != table_map_.end());
-  CflTable *table_find = it->second;
+  /*
+    CflTable *table_find = it->second;
+    DBUG_ASSERT(table_find != NULL);
+  */
   uint32_t ref_count = table->DecRefCount();
   if (ref_count == 0)
   {

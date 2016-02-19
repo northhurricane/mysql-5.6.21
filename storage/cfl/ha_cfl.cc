@@ -810,7 +810,14 @@ int ha_cfl::extra(enum ha_extra_function operation)
 int ha_cfl::delete_all_rows()
 {
   DBUG_ENTER("ha_cfl::delete_all_rows");
-  DBUG_RETURN(HA_ERR_WRONG_COMMAND);
+  //sleep(10);
+  //无事务概念，所以直接调用trucante函数
+  //TODO：保护对象
+  cfl_table_->Lock();
+  truncate();
+  cfl_table_->Unlock();
+  DBUG_RETURN(0);
+  //DBUG_RETURN(HA_ERR_WRONG_COMMAND);
 }
 
 
