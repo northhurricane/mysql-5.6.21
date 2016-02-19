@@ -833,7 +833,10 @@ int ha_cfl::delete_all_rows()
 int ha_cfl::truncate()
 {
   DBUG_ENTER("ha_cfl::truncate");
-  DBUG_RETURN(HA_ERR_WRONG_COMMAND);
+  //sleep(30);
+  cfl_table_->Truncate();
+  DBUG_RETURN(0);
+  //DBUG_RETURN(HA_ERR_WRONG_COMMAND);
 }
 
 

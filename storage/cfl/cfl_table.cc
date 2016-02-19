@@ -450,6 +450,20 @@ CflTable::Insert(cfl_dti_t key, void *row, uint16_t row_size)
   mysql_mutex_unlock(&insert_buffer_mutex_);
 }
 
+int
+CflTable::Truncate()
+{
+  //清理数据
+  insert_buffer_->Clear();
+
+  CflStorage::Close(storage_);
+  CflStorage::DestroyStorage(table_name_.c_str());
+  CflStorage::CreateStorage(table_name_.c_str());
+  storage_ = CflStorage::Open(table_name_.c_str());
+
+  return 0;
+}
+
 bool
 CflTable::PageOverflow(uint16_t row_size)
 {

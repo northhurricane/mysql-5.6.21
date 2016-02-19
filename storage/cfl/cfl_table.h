@@ -90,6 +90,7 @@ public :
 
 public :
   void Insert(cfl_dti_t key, void *row, uint16_t row_size);
+  int Truncate();
 
   CflStorage *GetStorage() { return storage_; }
 
