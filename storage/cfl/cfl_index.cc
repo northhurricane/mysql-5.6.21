@@ -272,6 +272,10 @@ CflIndex::LocatePage(cfl_dti_t key, cfl_key_cmp key_cmp)
     }
   }
 
+  //两个结果，找到或者没有找到
+  if (page_no == CFL_LOCATE_PAGE_NULL)
+    return CFL_LOCATE_PAGE_NULL;
+
   return page_no - 1;
 }
 

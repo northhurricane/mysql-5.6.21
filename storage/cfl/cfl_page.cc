@@ -205,6 +205,7 @@ CflPagePool::GetPage(CflStorage *storage, uint32_t nth_page)
 
   //获取内存页对象
   page = Dequeue();
+  DBUG_ASSERT(page != NULL);
   //读取文件内容
   r = storage->ReadPage(page->page(), CFL_PAGE_SIZE, nth_page);
   if (r <= 0)
