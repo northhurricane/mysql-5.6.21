@@ -48,6 +48,7 @@
 #define CFL_MAX_KEY_LENGTH (20)
 
 class CflTable;
+class CflInsertBuffer;
 
 /** @brief
   Example_share is a class that will be shared among all open handlers.
@@ -309,9 +310,15 @@ public:
   THR_LOCK_DATA **store_lock(THD *thd, THR_LOCK_DATA **to,
                              enum thr_lock_type lock_type);     ///< required
 private :
+  /*每个handler都有自己的insert buffer*/
+  CflInsertBuffer *insert_buffer_;
   CflTable *cfl_table_;
   cfl_cursor_t cursor_;
   cfl_isearch_t isearch_;
+  /*
+    插入行到插入缓冲区
+  */
+  int insert2buffer(cfl_dti_t key, void *row, uint16_t row_size);
   /*
     获取下一条记录
     参数:

@@ -78,6 +78,7 @@
 #include "cfl.h"
 #include "cfl_table.h"
 #include "cfl_row.h"
+#include "cfl_insert_buffer.h"
 
 static handler *cfl_create_handler(handlerton *hton,
                                    TABLE_SHARE *table, 
@@ -289,6 +290,7 @@ ha_cfl::ha_cfl(handlerton *hton, TABLE_SHARE *table_arg)
   :handler(hton, table_arg)
 {
   cfl_table_ = NULL;
+  insert_buffer_ = NULL;
   DBUG_ASSERT(1);
 }
 
@@ -296,6 +298,8 @@ ha_cfl::~ha_cfl()
 {
   if (cfl_table_ != NULL)
     CflTable::Destroy(cfl_table_);
+  if (insert_buffer_ != NULL)
+    CflInsertBuffer::Destroy(insert_buffer_);
 }
 
 
@@ -411,6 +415,7 @@ int ha_cfl::open(const char *name, int mode, uint test_if_locked)
   thr_lock_data_init(&share->lock,&lock,NULL);
 
   cfl_table_ = CflTable::Create(name);
+  insert_buffer_ = CflInsertBuffer::Create();
 
   DBUG_RETURN(0);
 }
@@ -495,10 +500,30 @@ int ha_cfl::write_row(uchar *buf)
   {
     DBUG_RETURN(1);
   }
-  cfl_table_->Insert(key_dti, cfl_row_buf, cfl_row_size);
+  insert2buffer(key_dti, cfl_row_buf, cfl_row_size);
+  //cfl_table_->Insert(key_dti, cfl_row_buf, cfl_row_size);
 
   DBUG_RETURN(0);
 }
+
+int ha_cfl::insert2buffer(cfl_dti_t key, void *row, uint16_t row_size)
+{
+  uint32_t exist_rows, exist_rows_size;
+  exist_rows = insert_buffer_->GetRowsCount();
+  exist_rows_size = insert_buffer_->GetRowsSize();
+  if (cfl_will_insert_cause_page_overflow(row_size, exist_rows,
+                                          exist_rows_size))
+  {
+    //将数据刷入磁盘
+    //insert_buffer_->Flush(maker_, storage_);
+    insert_buffer_->Clear();
+  }
+
+  //插入行进入insert buffer
+  insert_buffer_->Insert(key, row, row_size);
+  return 0;
+}
+
 
 
 /**
@@ -1187,7 +1212,7 @@ ha_cfl::next(bool &over)
         2、所有记录已经获取，此时cursor的postion为CFL_CURSOR_AFTER_END
         3、获取其中记录。此时cursor的postion为获取的记录数
     实现说明
-      ClfPage的申请和释放要注意，不要造成未释放的页面存在
+      CflPage的申请和释放要注意，不要造成未释放的页面存在
   */
 
   over = false;
@@ -1342,7 +1367,7 @@ ha_cfl::index_read(uchar * buf, const uchar * key, uint key_len,
   dti = cfl_t2i(&cdt);
   //构造查询结果
   isearch_.key = dti;
-  isearch_.key_cmp = my_key_func2clf_key_cmp(find_flag);
+  isearch_.key_cmp = my_key_func2cfl_key_cmp(find_flag);
   //检查输入内容是否接受
   if (isearch_.key_cmp == KEY_INVALID)
   {

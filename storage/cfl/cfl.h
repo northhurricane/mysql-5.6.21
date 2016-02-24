@@ -16,7 +16,7 @@ enum cfl_key_cmp {
 };
 
 inline enum cfl_key_cmp
-my_key_func2clf_key_cmp(enum ha_rkey_function key_func)
+my_key_func2cfl_key_cmp(enum ha_rkey_function key_func)
 {
   switch (key_func)
   {
