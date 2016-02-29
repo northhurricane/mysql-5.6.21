@@ -309,7 +309,16 @@ public:
 
   THR_LOCK_DATA **store_lock(THD *thd, THR_LOCK_DATA **to,
                              enum thr_lock_type lock_type);     ///< required
+
+
+  int multi_range_read_init(RANGE_SEQ_IF *seq, void *seq_init_param,
+                            uint n_ranges, uint mode,
+                            HANDLER_BUFFER *buf);
+  int multi_range_read_next(char **range_info);
 private :
+  /** The multi range read session object */
+  DsMrr_impl ds_mrr;
+
   /*每个handler都有自己的insert buffer*/
   CflInsertBuffer *insert_buffer_;
   CflTable *cfl_table_;

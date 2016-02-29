@@ -291,7 +291,7 @@ ha_cfl::ha_cfl(handlerton *hton, TABLE_SHARE *table_arg)
 {
   cfl_table_ = NULL;
   insert_buffer_ = NULL;
-  DBUG_ASSERT(1);
+  //DBUG_ASSERT(1);
 }
 
 ha_cfl::~ha_cfl()
@@ -500,8 +500,8 @@ int ha_cfl::write_row(uchar *buf)
   {
     DBUG_RETURN(1);
   }
-  insert2buffer(key_dti, cfl_row_buf, cfl_row_size);
-  //cfl_table_->Insert(key_dti, cfl_row_buf, cfl_row_size);
+  //insert2buffer(key_dti, cfl_row_buf, cfl_row_size);
+  cfl_table_->Insert(key_dti, cfl_row_buf, cfl_row_size);
 
   DBUG_RETURN(0);
 }
@@ -523,7 +523,6 @@ int ha_cfl::insert2buffer(cfl_dti_t key, void *row, uint16_t row_size)
   insert_buffer_->Insert(key, row, row_size);
   return 0;
 }
-
 
 
 /**
@@ -1457,7 +1456,18 @@ int ha_cfl::index_first(uchar *buf)
   int rc;
   DBUG_ENTER("ha_cfl::index_first");
   MYSQL_INDEX_READ_ROW_START(table_share->db.str, table_share->table_name.str);
-  rc= HA_ERR_WRONG_COMMAND;
+  //rc= HA_ERR_WRONG_COMMAND;
+  isearch_.key = CFL_DTI_MIN;
+  isearch_.key_cmp = KEY_GE;
+
+  my_bitmap_map *old_map;
+  old_map= dbug_tmp_use_all_columns(table, table->write_set);
+  rc = locate_cursor();
+  index_next(buf);
+  dbug_tmp_restore_column_map(table->write_set, old_map);
+
+  //rc = HA_ERR_END_OF_FILE;
+  //rc = rnd_next(buf);
   MYSQL_INDEX_READ_ROW_DONE(rc);
   DBUG_RETURN(rc);
 }
@@ -1691,3 +1701,19 @@ ha_cfl::statistic()
   stats.mrr_length_per_rec = 14;
 }
 
+int
+ha_cfl::multi_range_read_init(RANGE_SEQ_IF*	seq,
+                              void* seq_init_param,
+                              uint  n_ranges,
+                              uint  mode,
+                              HANDLER_BUFFER*	buf)
+{
+  return(ds_mrr.dsmrr_init(this, seq, seq_init_param,
+                           n_ranges, mode, buf));
+}
+
+int
+ha_cfl::multi_range_read_next(char **range_info)
+{
+  return(ds_mrr.dsmrr_next(range_info));
+}
