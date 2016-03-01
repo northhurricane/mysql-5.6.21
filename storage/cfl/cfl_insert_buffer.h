@@ -31,6 +31,7 @@ class CflInsertBuffer
 {
 public :
   static CflInsertBuffer* Create();
+  static CflInsertBuffer* Create(uint32_t size);
   static void Destroy(CflInsertBuffer *insert_buffer);
 
 public :
@@ -61,12 +62,51 @@ public :
     获取缓存中真正row的个数
   */
   uint32_t GetRowsCount() { return sorted_eles_.size() - 2; }
+  /*
+    获取插入的行所占用的空间
+  */
   uint32_t GetRowsSize() { return offset_; }
+  /*
+    插入行是否会导致缓冲区溢出
+  */
+  bool OverFlow(uint32_t row_size)
+  {
+    if ((row_size + offset_) > buffer_size_)
+      return true;
+    return false;
+  }
+  /*
+    获取缓冲区中的行
+    参数
+      nth     ：输入参数，1-based，所要获取的行
+      row_size：输出参数，所获取行的大小
+    return
+      如果成功，返回行所在的地址；否则返回0（空指针）
+  */
+  const uint8_t* GetNthRow(uint32_t nth, uint32_t *row_size)
+  {
+    *row_size = 0;
+    if (nth > GetRowsCount())
+      return NULL;
+    *row_size = sorted_eles_[nth].row_size;
+    return buffer_ + sorted_eles_[nth].row_pos;
+  }
+
+  /*
+    GetNthRow并不是完全安全的，返回的指针回暴露内部的存储。
+    定义一个未实现的函数来特别说明一下
+  */
+  uint8_t* GetNthRowSafe(uint32_t nth, uint8_t *buffer
+                         , uint32_t buffer_size, uint32_t *row_size)
+  {
+    return NULL;
+  }
 
 private :
   //返回插入位置
   uint32_t Locate(cfl_dti_t key);
   int Initialize();
+  int Initialize(uint32_t size);
   bool Deinitialize();
 
   CflInsertBuffer() {}
@@ -103,6 +143,5 @@ private :
   //当前排序的数据索引
   vector<cfl_veckey_t> sorted_eles_;
 };
-
 
 #endif //_CFL_INSERT_BUFFER_H_

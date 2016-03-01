@@ -325,7 +325,7 @@ private :
   cfl_cursor_t cursor_;
   cfl_isearch_t isearch_;
   /*
-    插入行到插入缓冲区
+    插入行到handler的插入缓冲区中，插入时不使用锁，在触发合并条件后，插入数据加入到cfl table的插入缓冲区中
   */
   int insert2buffer(cfl_dti_t key, void *row, uint16_t row_size);
   /*

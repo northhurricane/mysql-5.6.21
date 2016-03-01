@@ -17,6 +17,22 @@ CflInsertBuffer::Create()
   return insert_buffer;
 }
 
+CflInsertBuffer*
+CflInsertBuffer::Create(uint32_t size)
+{
+  //生成对象
+  CflInsertBuffer *insert_buffer = new CflInsertBuffer();
+
+  int r = insert_buffer->Initialize(size);
+  if (r < 0)
+  {
+    delete insert_buffer;
+    return NULL;
+  }
+
+  return insert_buffer;
+}
+
 void
 CflInsertBuffer::Destroy(CflInsertBuffer *insert_buffer)
 {
@@ -76,6 +92,24 @@ CflInsertBuffer::Initialize()
   if (buffer_ == NULL)
     goto fail;
   buffer_size_ = CFL_PAGE_SIZE;
+
+  InitFakeRecord();
+
+  return 0;
+
+fail :
+  return -1;
+}
+
+int
+CflInsertBuffer::Initialize(uint32_t size)
+{
+  offset_ = 0;
+  //buffer_ = NULL;
+  buffer_ = (uint8_t*)malloc(size);
+  if (buffer_ == NULL)
+    goto fail;
+  buffer_size_ = size;
 
   InitFakeRecord();
 
