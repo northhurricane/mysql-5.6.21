@@ -507,6 +507,9 @@ CflTable::Initialize(const char *name)
   {
     goto FAIL;
   }
+  //buffer_pool_ =
+  //CflInsertBufferPool::Create(CFL_INSERT_BUFFER_POOL_DEFAULT_SIZE
+  //                            , CFL_PAGE_SIZE);
 
   return 0;
 FAIL:
@@ -516,6 +519,8 @@ FAIL:
     CflPageMaker::Destroy(maker_);
   if (storage_ != NULL)
     CflStorage::Close(storage_);
+//if (buffer_pool_ != NULL)
+//  CflInsertBufferPool::Destroy(buffer_pool_);
   return -1;
 }
 
@@ -526,7 +531,20 @@ CflTable::Deinitialize()
   CflPageMaker::Destroy(maker_);
   CflInsertBuffer::Destroy(insert_buffer_);
   CflStorage::Close(storage_);
+  //CflInsertBufferPool::Destroy(buffer_pool_);
 
   return 0;
 }
 
+CflInsertBuffer* CflTable::GetBuffer()
+{
+  return buffer_pool_->GetBuffer();
+}
+void CflTable::PutBuffer(CflInsertBuffer* buffer)
+{
+  buffer_pool_->PutBuffer(buffer);
+}
+void CflTable::FlushBuffer(CflInsertBuffer* buffer)
+{
+  //TODO
+}

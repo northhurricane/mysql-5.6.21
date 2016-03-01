@@ -8,6 +8,7 @@
 
 #include <stdint.h>
 #include <vector>
+#include <list>
 #include "cfl.h"
 #include "cfl_dt.h"
 
@@ -142,6 +143,37 @@ private :
 
   //当前排序的数据索引
   vector<cfl_veckey_t> sorted_eles_;
+};
+
+#define CFL_INSERT_BUFFER_POOL_DEFAULT_SIZE (1)
+
+class CflInsertBufferPool
+{
+public :
+  static CflInsertBufferPool* Create(uint32_t pool_size, uint32_t buffer_size);
+  static int Destroy(CflInsertBufferPool *pool);
+
+  CflInsertBuffer* GetBuffer();
+  void PutBuffer(CflInsertBuffer *page);
+
+private :
+  CflInsertBufferPool() {}
+
+  void Lock()
+  {
+    mysql_mutex_lock(&pool_mutex_);
+  }
+  void Unlock()
+  {
+    mysql_mutex_unlock(&pool_mutex_);
+  }
+
+  int Initialize();
+  int Deinitialize();
+  list<CflInsertBuffer*> free_buffers_;
+  mysql_mutex_t pool_mutex_;
+
+  uint32_t buffer_size_;
 };
 
 #endif //_CFL_INSERT_BUFFER_H_

@@ -19,6 +19,7 @@ using namespace std;
 class CflIndex;
 class CflData;
 class CflInsertBuffer;
+class CflInsertBufferPool;
 
 /*
   cfl表的存储对象
@@ -103,6 +104,9 @@ public :
   }
 
   CflStorage *GetStorage() { return storage_; }
+  CflInsertBuffer* GetBuffer();
+  void PutBuffer(CflInsertBuffer* buffer);
+  void FlushBuffer(CflInsertBuffer* buffer);
 
 private :
   int Initialize(const char *name);
@@ -111,6 +115,9 @@ private :
   CflInsertBuffer *insert_buffer_;
   CflPageMaker *maker_;
   CflStorage *storage_;
+
+  /*每个table通过insert buffer*/
+  CflInsertBufferPool *buffer_pool_;
 
   /*插入缓冲区保护，在进行行插入时保护插入缓冲区*/
   mysql_mutex_t insert_buffer_mutex_;
@@ -130,6 +137,7 @@ private :
   bool PageOverflow(uint16_t row_size);
   CflTable() {
     insert_buffer_ = NULL;
+    buffer_pool_ = NULL;
     maker_ = NULL;
     storage_ = NULL;
     ref_count_ = 0;

@@ -168,5 +168,60 @@ CflInsertBuffer::Locate(cfl_dti_t key)
 }
 
 
+CflInsertBufferPool* CflInsertBufferPool::Create(uint32_t pool_size,
+                                                 uint32_t buffer_size)
+{
+  CflInsertBufferPool *pool = new CflInsertBufferPool();
+  if (pool == NULL)
+    return NULL;
 
+  pool->buffer_size_ = buffer_size;
+  int r = pool->Initialize();
+  if (r < 0)
+  {
+    return NULL;
+    delete pool;
+  }
+  return pool;
+}
+
+int CflInsertBufferPool::Destroy(CflInsertBufferPool *pool)
+{
+  pool->Deinitialize();
+
+  return 0;
+}
+
+int CflInsertBufferPool::Initialize()
+{
+  mysql_mutex_init(NULL, &pool_mutex_, MY_MUTEX_INIT_FAST);
+  return 0;
+}
+
+int CflInsertBufferPool::Deinitialize()
+{
+  mysql_mutex_destroy(&pool_mutex_);
+  return 0;
+}
+
+CflInsertBuffer* CflInsertBufferPool::GetBuffer()
+{
+  CflInsertBuffer *buffer = NULL;
+  Lock();
+  //从缓冲区池获取缓冲区
+  if (free_buffers_.size() > 0)
+  {
+    buffer = free_buffers_.front();
+    free_buffers_.pop_front();
+  }
+  Unlock();
+  return buffer;
+}
+
+void CflInsertBufferPool::PutBuffer(CflInsertBuffer *buffer)
+{
+  Lock();
+  free_buffers_.push_back(buffer);
+  Unlock();
+}
 

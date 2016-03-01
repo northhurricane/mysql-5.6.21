@@ -296,10 +296,10 @@ ha_cfl::ha_cfl(handlerton *hton, TABLE_SHARE *table_arg)
 
 ha_cfl::~ha_cfl()
 {
+  if (insert_buffer_ != NULL)
+    cfl_table_->PutBuffer(insert_buffer_);
   if (cfl_table_ != NULL)
     CflTable::Destroy(cfl_table_);
-  if (insert_buffer_ != NULL)
-    CflInsertBuffer::Destroy(insert_buffer_);
 }
 
 
@@ -415,7 +415,7 @@ int ha_cfl::open(const char *name, int mode, uint test_if_locked)
   thr_lock_data_init(&share->lock,&lock,NULL);
 
   cfl_table_ = CflTable::Create(name);
-  insert_buffer_ = CflInsertBuffer::Create();
+  DBUG_ASSERT(cfl_table_ != NULL);
 
   DBUG_RETURN(0);
 }
@@ -500,23 +500,39 @@ int ha_cfl::write_row(uchar *buf)
   {
     DBUG_RETURN(1);
   }
+  //为效率提高，使用handler上的buffer进行数据插入
   //insert2buffer(key_dti, cfl_row_buf, cfl_row_size);
+  //直接向表中插入数据
   cfl_table_->Insert(key_dti, cfl_row_buf, cfl_row_size);
 
   DBUG_RETURN(0);
 }
 
+void ha_cfl::flush_buffer()
+{
+  cfl_table_->FlushBuffer(insert_buffer_);
+  insert_buffer_ = NULL;
+}
+
 int ha_cfl::insert2buffer(cfl_dti_t key, void *row, uint16_t row_size)
 {
+  if (insert_buffer_ == NULL)
+  {
+    insert_buffer_ = cfl_table_->GetBuffer();
+  }
+  if (insert_buffer_ == NULL)
+  {
+    //内存不足，无法分配insert buffer
+  }
+
   uint32_t exist_rows, exist_rows_size;
   exist_rows = insert_buffer_->GetRowsCount();
   exist_rows_size = insert_buffer_->GetRowsSize();
-  if (cfl_will_insert_cause_page_overflow(row_size, exist_rows,
-                                          exist_rows_size))
+  bool buffer_need_flush = true;
+  if (buffer_need_flush)
   {
-    //将数据刷入磁盘
-    //insert_buffer_->Flush(maker_, storage_);
-    insert_buffer_->Clear();
+    //将数据刷入表中
+    flush_buffer();
   }
 
   //插入行进入insert buffer

@@ -329,6 +329,10 @@ private :
   */
   int insert2buffer(cfl_dti_t key, void *row, uint16_t row_size);
   /*
+    将缓冲区数据写入表中。
+  */
+  void flush_buffer();
+  /*
     获取下一条记录
     参数:
       over:输出参数，是否获取结束。true,获取记录成功;false,数据获取
