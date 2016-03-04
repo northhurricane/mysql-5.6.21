@@ -331,6 +331,7 @@ private :
   /*
     将缓冲区数据写入表中。
   */
+  uint32_t test_count;
   void flush_buffer();
   /*
     获取下一条记录

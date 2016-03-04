@@ -79,13 +79,24 @@ CflStorage::Initialize(const char *name)
 
   return 0;
 
-  //to do : fail process
+  //todo : fail process
 }
 
 int
 CflStorage::Deinitialize()
 {
+  //TODO 关闭存储
   return 0;
+}
+
+cfl_dti_t
+CflStorage::GetMaxTimestamp()
+{
+  //TODO 获取记录的最大页面的最大的时间戳
+  uint32_t index_node_number = index_->ReadIndexNodeNumber();
+  if (index_node_number == 0)
+    return CFL_DTI_MIN;
+  return index_->ReadNthIndexNode(index_node_number - 1);
 }
 
 bool
@@ -438,11 +449,18 @@ CflTable::Close()
 void
 CflTable::Insert(cfl_dti_t key, void *row, uint16_t row_size)
 {
+  /*TODO 判断记录是否可以插入*/
+  if (key < insert_protection_)
+  {
+    return ;
+  }
+
   mysql_mutex_lock(&insert_buffer_mutex_);
 
   if (PageOverflow(row_size))
   {
     //将数据刷入磁盘
+    insert_protection_ = insert_buffer_->GetMaxTimestamp();
     insert_buffer_->Flush(maker_, storage_);
   }
 
@@ -463,6 +481,7 @@ CflTable::Truncate()
   CflStorage::DestroyStorage(table_name_.c_str());
   CflStorage::CreateStorage(table_name_.c_str());
   storage_ = CflStorage::Open(table_name_.c_str());
+  insert_protection_ = storage_->GetMaxTimestamp();
 
   return 0;
 }
@@ -507,6 +526,8 @@ CflTable::Initialize(const char *name)
   {
     goto FAIL;
   }
+  insert_protection_ = storage_->GetMaxTimestamp();
+  
   //buffer_pool_ =
   //CflInsertBufferPool::Create(CFL_INSERT_BUFFER_POOL_DEFAULT_SIZE
   //                            , CFL_PAGE_SIZE);
@@ -540,11 +561,17 @@ CflInsertBuffer* CflTable::GetBuffer()
 {
   return buffer_pool_->GetBuffer();
 }
+
 void CflTable::PutBuffer(CflInsertBuffer* buffer)
 {
   buffer_pool_->PutBuffer(buffer);
 }
+
 void CflTable::FlushBuffer(CflInsertBuffer* buffer)
 {
   //TODO
+  //buffer加入带插入缓冲区
+  //
 }
+
+

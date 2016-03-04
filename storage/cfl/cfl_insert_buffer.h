@@ -92,7 +92,6 @@ public :
     *row_size = sorted_eles_[nth].row_size;
     return buffer_ + sorted_eles_[nth].row_pos;
   }
-
   /*
     GetNthRow并不是完全安全的，返回的指针回暴露内部的存储。
     定义一个未实现的函数来特别说明一下
@@ -101,6 +100,14 @@ public :
                          , uint32_t buffer_size, uint32_t *row_size)
   {
     return NULL;
+  }
+  /*
+    获取最大记录的时间戳
+  */
+  cfl_dti_t GetMaxTimestamp()
+  {
+    DBUG_ASSERT(sorted_eles_.size() > 1);
+    return sorted_eles_[sorted_eles_.size() - 1].key;
   }
 
 private :

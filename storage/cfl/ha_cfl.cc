@@ -291,6 +291,7 @@ ha_cfl::ha_cfl(handlerton *hton, TABLE_SHARE *table_arg)
 {
   cfl_table_ = NULL;
   insert_buffer_ = NULL;
+  test_count = 0;
   //DBUG_ASSERT(1);
 }
 
@@ -528,7 +529,12 @@ int ha_cfl::insert2buffer(cfl_dti_t key, void *row, uint16_t row_size)
   uint32_t exist_rows, exist_rows_size;
   exist_rows = insert_buffer_->GetRowsCount();
   exist_rows_size = insert_buffer_->GetRowsSize();
-  bool buffer_need_flush = true;
+  bool buffer_need_flush = false;
+  if (test_count > 25)
+  {
+    buffer_need_flush = true;
+    test_count = 0;
+  }
   if (buffer_need_flush)
   {
     //将数据刷入表中

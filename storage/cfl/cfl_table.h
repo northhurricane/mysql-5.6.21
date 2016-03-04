@@ -15,6 +15,7 @@ using namespace std;
 1、存储分为两部分。索引和数据，数据保存完整的行信息，索引保存索引时间列的信息
 2、根据1，将索引和数据分别存储在不同的文件中，并对应不同的对象
 3、写入顺序。首先在data中写入page，然后在index中写入索引项，最后在索引头中更新索引项的计数。这样的写入顺序可以确保在意外宕机后，再次启动不会出现数据上的错误。但会造成数据丢失。可在事务功能添加后进行确保数据的持久性需求。
+4、
 */
 class CflIndex;
 class CflData;
@@ -35,7 +36,9 @@ public :
   static CflStorage *Open(const char *name);
   static int Close(CflStorage *storage);
 
-  //
+  /*
+   写入页
+  */
   int WritePage(void *page, uint32_t rows_count, cfl_dti_t dti);
   /*
     读取数据页
@@ -43,7 +46,10 @@ public :
       nth_page:0-based.
   */
   int ReadPage(void *buffer, uint32_t buffer_size, uint32_t nth_page);
-
+  /*
+    从文件中获取当前存储中的最大时间序列的值
+  */
+  cfl_dti_t GetMaxTimestamp();
   /*
     定位记录
     返回值：
@@ -104,8 +110,18 @@ public :
   }
 
   CflStorage *GetStorage() { return storage_; }
+
+  /*
+    获取table上的缓冲区
+  */
   CflInsertBuffer* GetBuffer();
+  /*
+    将缓冲区释放回table
+  */
   void PutBuffer(CflInsertBuffer* buffer);
+  /*
+    将缓冲区中的数据刷入table中，同时归还该缓冲区
+  */
   void FlushBuffer(CflInsertBuffer* buffer);
 
 private :
@@ -121,6 +137,9 @@ private :
 
   /*插入缓冲区保护，在进行行插入时保护插入缓冲区*/
   mysql_mutex_t insert_buffer_mutex_;
+
+  /*由于存储方式的限制，小于最大页面的最大记录的时间戳数据是不能插入*/
+  cfl_dti_t insert_protection_;
 
 protected :
   static CflTable* CreateInstance(const char *name);

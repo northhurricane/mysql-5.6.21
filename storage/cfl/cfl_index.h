@@ -62,8 +62,6 @@ public :
   {
     return endian_read_uint32(buffer_ + CFL_INDEX_NODE_COUNT);
   }
-
-private :
   /*
     nth:0-based
   */
@@ -74,6 +72,8 @@ private :
     return cfl_s2dti(nth_node);
     //    return endian_read_uint64(nth_node);
   }
+
+private :
   /*
     nth:0-based
   */
