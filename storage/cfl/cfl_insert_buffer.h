@@ -106,7 +106,7 @@ public :
   */
   cfl_dti_t GetMaxTimestamp()
   {
-    DBUG_ASSERT(sorted_eles_.size() > 1);
+    DBUG_ASSERT(sorted_eles_.size() > 2);
     return sorted_eles_[sorted_eles_.size() - 2].key;
   }
 
