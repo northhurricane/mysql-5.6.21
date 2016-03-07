@@ -1,8 +1,61 @@
 #ifndef _CFL_ROW_H_
 #define _CFL_ROW_H_
 
+#include <stdint.h>
 #include "cfl_dt.h"
 #include "cfl_endian.h"
+
+/*
+cfl的行设计
+version1第一版
+只存储数据，没有row的控制信息
+
+version2第二版
+在头部增加1字节，用于存储控制信息，
+*/
+
+/*
+行格式
+row format:
+|flag info|data           |
+|8bits    |variable length|
+flag info
+|deleted  |reserve |
+|1bit     |7bits   |
+*/
+
+typedef uint8_t cfl_row_flag_t;
+
+#define CFL_ROW_STORAGE_SIZE (sizeof(cfl_row_flag_t))
+
+#define CFL_ROW_FLAG_MASK_DELETED (0x8)
+
+inline bool
+cfl_row_flag_read_deleted(cfl_row_flag_t flag)
+{
+  if (CFL_ROW_FLAG_MASK_DELETED & flag)
+    return true;
+  return false;
+}
+
+inline cfl_row_flag_t
+cfl_row_flag_write_deleted(cfl_row_flag_t flag, bool deleted)
+{
+  if (deleted)
+    return CFL_ROW_FLAG_MASK_DELETED | flag;
+  return flag;
+}
+
+inline void
+cfl_row_flag_write(uint8_t * target, cfl_row_flag_t flag)
+{
+  *target = flag;
+}
+
+inline cfl_row_flag_t cfl_row_flag_read(uint8_t *source)
+{
+  return *source;
+}
 
 /*
   将mysql的数据转换为cfl进行存储的行数据
