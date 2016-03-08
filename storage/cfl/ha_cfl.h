@@ -357,6 +357,7 @@ private :
     通过索引定位后的next
   */
   int locate_next(bool &over);
+  bool check_renext();
   /*
     进行table的统计信息构造
   */

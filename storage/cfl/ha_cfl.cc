@@ -1200,6 +1200,7 @@ ha_cfl::fetch_next(bool &over)
   */
   //定位下一条记录
   int r;
+next_row :
   r = next(over);
   if (r < 0)
   {
@@ -1214,7 +1215,12 @@ ha_cfl::fetch_next(bool &over)
   r = fetch();
   if (r < 0)
   {
+    //TODO 错误处理
   }
+
+  bool renext = false;
+  if (renext)
+    goto next_row;
 
   return 0;
 }
@@ -1346,6 +1352,19 @@ ha_cfl::fetch()
   cfl_cursor_row_length_set(cursor_, offset_next - offset);
 
   return 0;
+}
+
+bool
+ha_cfl::check_renext()
+{
+  cfl_row_flag_t flag;
+  uint8_t *row;
+
+  row = cfl_cursor_row_get(cursor_);
+  flag = cfl_row_flag_read(row);
+  if (cfl_row_flag_read_deleted(flag))
+    return true;
+  return false;
 }
 
 int

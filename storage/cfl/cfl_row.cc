@@ -300,9 +300,9 @@ cfl_row_to_mysql(Field ** fields, uchar *buf, uchar *row,
                  uint8_t *cfl_row, uint32_t row_length)
 {
   //读取flag信息
-  uint8_t *cfl_flag = cfl_row;
+  /*uint8_t *cfl_flag = cfl_row;
   cfl_row_flag_t flag;
-  flag = cfl_row_flag_read(cfl_flag);
+  flag = cfl_row_flag_read(cfl_flag);*/
 
   //读取数据内容
   uint8_t *cfl_field = cfl_row + CFL_ROW_STORAGE_SIZE;
@@ -322,7 +322,12 @@ void*
 cfl_row_get_nth_field(Field ** fields, uint8_t *cfl_row, uint32_t row_length
                       , uint32_t nth_field, uint32_t *field_len)
 {
-  uint8_t *cfl_field = cfl_row;
+  //读取flag信息
+  /*uint8_t *cfl_flag = cfl_row;
+  cfl_row_flag_t flag;
+  flag = cfl_row_flag_read(cfl_flag);*/
+
+  uint8_t *cfl_field = cfl_row + CFL_ROW_STORAGE_SIZE;
   int field_length = 0;
   uint32_t counter = 0;
 
@@ -346,7 +351,12 @@ cfl_row_get_nth_field(Field ** fields, uint8_t *cfl_row, uint32_t row_length
 cfl_dti_t
 cfl_row_get_key_data(Field **fields, uint8_t *cfl_row)
 {
-  uint8_t *cfl_field = cfl_row;
+  //读取flag信息
+  /*  uint8_t *cfl_flag = cfl_row;
+  cfl_row_flag_t flag;
+  flag = cfl_row_flag_read(cfl_flag);*/
+
+  uint8_t *cfl_field = cfl_row + CFL_ROW_STORAGE_SIZE;
   int field_length = 0;
   Field *rfield;
   cfl_dti_t rowkey = 0;
