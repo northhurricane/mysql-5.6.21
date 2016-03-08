@@ -251,14 +251,21 @@ cfl_row_from_mysql(Field ** fields, uchar *row
                    , void *row_buf, uint32_t buf_size, cfl_dti_t *key)
 {
   uint32_t cfl_row_size = 0;
-  uint8_t *offset = (uint8_t*)row_buf;
-  uint32_t buf_size_inner = buf_size;
-  int filled_length;
-  bool key_field = false;
 
   DBUG_ASSERT(key != NULL);
-  *key = 1; //用于测试，需要删除
+  *key = 1; //用于测试，可以删除
 
+  //初始化row flag部分
+  cfl_row_flag_t flag = 0;
+  uint8_t *cfl_flag = (uint8_t*)row_buf;
+  cfl_row_flag_write(cfl_flag, flag);
+  cfl_row_size += CFL_ROW_STORAGE_SIZE;
+
+  //进行数据填写
+  uint8_t *offset = (uint8_t*)row_buf + CFL_ROW_STORAGE_SIZE;
+  uint32_t buf_size_inner = buf_size - CFL_ROW_STORAGE_SIZE;
+  int filled_length;
+  bool key_field = false;
   for (Field **field = fields ; *field ; field++)
   {
     const bool is_null= (*field)->is_null();
@@ -292,7 +299,13 @@ int
 cfl_row_to_mysql(Field ** fields, uchar *buf, uchar *row, 
                  uint8_t *cfl_row, uint32_t row_length)
 {
-  uint8_t *cfl_field = cfl_row;
+  //读取flag信息
+  uint8_t *cfl_flag = cfl_row;
+  cfl_row_flag_t flag;
+  flag = cfl_row_flag_read(cfl_flag);
+
+  //读取数据内容
+  uint8_t *cfl_field = cfl_row + CFL_ROW_STORAGE_SIZE;
   int field_length = 0;
 
   for (Field **field = fields ; *field ; field++)
@@ -311,7 +324,7 @@ cfl_row_get_nth_field(Field ** fields, uint8_t *cfl_row, uint32_t row_length
 {
   uint8_t *cfl_field = cfl_row;
   int field_length = 0;
-  int counter = 0;
+  uint32_t counter = 0;
 
   *field_len = 0;
   for (Field **field = fields ; *field ; field++)
