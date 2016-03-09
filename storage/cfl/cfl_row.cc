@@ -133,7 +133,7 @@ cfl_field_from_mysql(Field *field, void *buf, uint32_t buf_size)
 }
 
 inline int
-cfl_field_length(Field *field, uint8_t *field_data)
+cfl_field_length(Field *field, const uint8_t *field_data)
 {
   enum_field_types type = field->type();
   switch (type)
@@ -246,8 +246,15 @@ cfl_field_2_mysql(Field *field, uint8_t *field_data)
   return 0;
 }
 
+inline
+int
+cfl_row_cmp_field(Field *field, const uint8_t *field1, const uint8_t *field2)
+{
+  return 0;
+}
+
 uint32_t
-cfl_row_from_mysql(Field ** fields, uchar *row
+cfl_row_from_mysql(Field ** fields, const uchar *row
                    , void *row_buf, uint32_t buf_size, cfl_dti_t *key)
 {
   uint32_t cfl_row_size = 0;
@@ -377,4 +384,30 @@ cfl_row_get_key_data(Field **fields, uint8_t *cfl_row)
 
   DBUG_ASSERT(rowkey != 0);
   return rowkey;
+}
+
+int
+cfl_row_cmp(Field ** fields, const uint8_t *row1, const uint8_t *row2)
+{
+  const uint8_t *row1_field = row1 + CFL_ROW_STORAGE_SIZE;
+  const uint8_t *row2_field = row1 + CFL_ROW_STORAGE_SIZE;
+  int row1_field_length = 0, row2_field_length = 0;
+  Field *rfield;
+
+  int cmp = 0;
+  for (Field **field = fields ; *field ; field++)
+  {
+    rfield = *field;
+    cmp = cfl_row_cmp_field(rfield, row1_field, row2_field);
+    if (cmp != 0)
+    {
+      break;
+    }
+    row1_field_length = cfl_field_length(*field, row1_field);
+    row1_field += row1_field_length;
+    row2_field_length = cfl_field_length(*field, row2_field);
+    row2_field += row2_field_length;
+  }
+
+  return cmp;
 }

@@ -602,7 +602,59 @@ int ha_cfl::delete_row(const uchar *buf)
 {
   DBUG_ENTER("ha_cfl::delete_row");
   DBUG_RETURN(HA_ERR_WRONG_COMMAND);
+
+  /*获取删除行的内容*/
+  uint8_t cfl_row_buf[65536];
+  uint32_t cfl_row_size = 0;
+  cfl_dti_t key_dti = 0;
+  my_bitmap_map *org_bitmap= dbug_tmp_use_all_columns(table, table->read_set);
+  cfl_row_size = cfl_row_from_mysql(table->field, buf
+                                    , cfl_row_buf, sizeof(cfl_row_buf)
+                                    , &key_dti);
+  dbug_tmp_restore_column_map(table->read_set, org_bitmap);
+
+  //进行删除
+  delete_rows(table->field, key_dti, cfl_row_buf, cfl_row_size);
+
+  DBUG_RETURN(HA_ERR_WRONG_COMMAND);
 }
+
+int ha_cfl::delete_rows(Field ** fields, cfl_dti_t key
+                        , const uint8_t *row, uint32_t row_size)
+{
+  //根据key进行定位，获取第一条匹配key的记录
+  isearch_.key = key;
+  isearch_.key_cmp = KEY_EQUAL;
+  int rc = locate_cursor();
+  if (rc == HA_ERR_END_OF_FILE)
+  {
+    return 0;
+  }
+
+  uint8_t *row_to_match;
+  int cmp_result;
+  int r;
+  bool over;
+  do
+  {
+    //步骤1，进行行比较
+    row_to_match = cursor_.row;
+    cmp_result = cfl_row_cmp(fields, row_to_match, row);
+    //步骤2，如果匹配，进行删除，获取下一条记录；否则退出
+    if (cmp_result == 0)
+    {
+    }
+    else
+    {
+      break;
+    }
+    r = next(over);
+    if (over)
+      break;
+  } while (true);
+  return 0;
+}
+
 
 
 /**

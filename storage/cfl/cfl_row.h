@@ -62,7 +62,7 @@ inline cfl_row_flag_t cfl_row_flag_read(uint8_t *source)
   返回:转换后的行大小
 */
 uint32_t
-cfl_row_from_mysql(Field ** fields, uchar *row
+cfl_row_from_mysql(Field ** fields, const uchar *row
                    , void *row_buf, uint32_t buf_size, cfl_dti_t *key);
 
 /*
@@ -85,5 +85,8 @@ cfl_row_get_nth_field(Field ** fields, uint8_t *cfl_row, uint32_t row_length
 
 cfl_dti_t
 cfl_row_get_key_data(Field ** fields, uint8_t *cfl_row);
+
+int
+cfl_row_cmp(Field ** fields, const uint8_t *row1, const uint8_t *row2);
 
 #endif //_CFL_ROW_H_
