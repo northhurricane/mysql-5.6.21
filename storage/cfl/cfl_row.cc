@@ -183,14 +183,14 @@ cfl_field_2_mysql(Field *field, uint8_t *field_data)
   case MYSQL_TYPE_TINY:
   {
     int8_t v2 = (int8_t)123;
-    //endian_write_uint8(buf, (uint8_t)v2);
+    v2 = endian_read_uint8(field_data);
     field->store(v2);
     return sizeof(uint8_t);
   }
   case MYSQL_TYPE_SHORT:
   {
     int16_t v2 = (int16_t)123;
-    //endian_write_uint16(buf, (uint16_t)v2);
+    v2 = endian_read_uint16(field_data);
     field->store(v2);
     return sizeof(uint16_t);
   }
@@ -204,7 +204,7 @@ cfl_field_2_mysql(Field *field, uint8_t *field_data)
   case MYSQL_TYPE_LONGLONG:
   {
     int64_t v2 = (int64_t)123;
-    //endian_write_uint16(buf, (uint64_t)v);
+    v2 = endian_read_uint64(field_data);
     field->store(v2);
     return sizeof(uint64_t);
   }
@@ -246,10 +246,134 @@ cfl_field_2_mysql(Field *field, uint8_t *field_data)
   return 0;
 }
 
+/*
+*/
 inline
 int
 cfl_row_cmp_field(Field *field, const uint8_t *field1, const uint8_t *field2)
 {
+  enum_field_types type = field->type();
+  switch (type)
+  {
+  case MYSQL_TYPE_TINY:
+  {
+    int8_t f1_v, f2_v;
+    f1_v = endian_read_int8(field1);
+    f2_v = endian_read_int8(field2);
+    if (f1_v < f2_v)
+    {
+      return -1;
+    }
+    else if(f1_v > f2_v)
+    {
+      return 1;
+    }
+    else
+    {
+      return 0;
+    }
+  }
+  case MYSQL_TYPE_SHORT:
+  {
+    int16_t f1_v,f2_v;
+    f1_v = endian_read_int16(field1);
+    f2_v = endian_read_int16(field2);
+    if (f1_v < f2_v)
+    {
+      return -1;
+    }
+    else if(f1_v > f2_v)
+    {
+      return 1;
+    }
+    else
+    {
+      return 0;
+    }
+  }
+  case MYSQL_TYPE_LONG:
+  {
+    int32_t f1_v, f2_v;
+    f1_v = endian_read_int32(field1);
+    f2_v = endian_read_int32(field2);
+    if (f1_v < f2_v)
+    {
+      return -1;
+    }
+    else if(f1_v > f2_v)
+    {
+      return 1;
+    }
+    else
+    {
+      return 0;
+    }
+  }
+  case MYSQL_TYPE_LONGLONG:
+  {
+    int64_t f1_v, f2_v;
+
+    f1_v = endian_read_int64(field1);
+    f2_v = endian_read_int64(field2);
+    if (f1_v < f2_v)
+    {
+      return -1;
+    }
+    else if(f1_v > f2_v)
+    {
+      return 1;
+    }
+    else
+    {
+      return 0;
+    }
+  }
+  case MYSQL_TYPE_TIMESTAMP:
+  {
+    cfl_dti_t f1_v, f2_v;
+
+    f1_v = cfl_s2dti(field1);
+    f2_v = cfl_s2dti(field2);
+    if (f1_v < f2_v)
+    {
+      return -1;
+    }
+    else if(f1_v > f2_v)
+    {
+      return 1;
+    }
+    else
+    {
+      return 0;
+    }
+  }
+  default:
+  {
+    //通过字符方式存储
+    uint16_t str1_len = endian_read_uint16(field1);
+    const char *str1 = (const char *)(field1 + sizeof(uint16_t));
+    uint16_t str2_len = endian_read_uint16(field2);
+    const char *str2 = (const char *)(field2 + sizeof(uint16_t));
+
+    int r;
+    if (str1_len > str2_len)
+    {
+      r = strncmp(str1, str2, str2_len);
+      if (r == 0)
+        r = 1;
+    }
+    else
+    {
+      r = strncmp(str1, str2, str1_len);
+      if (r == 0)
+      {
+        if (str1_len != str2_len)
+          r = -1;
+      }
+    }
+    return r;
+  }
+  }
   return 0;
 }
 
@@ -390,7 +514,7 @@ int
 cfl_row_cmp(Field ** fields, const uint8_t *row1, const uint8_t *row2)
 {
   const uint8_t *row1_field = row1 + CFL_ROW_STORAGE_SIZE;
-  const uint8_t *row2_field = row1 + CFL_ROW_STORAGE_SIZE;
+  const uint8_t *row2_field = row2 + CFL_ROW_STORAGE_SIZE;
   int row1_field_length = 0, row2_field_length = 0;
   Field *rfield;
 

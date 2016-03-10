@@ -57,7 +57,7 @@ cfl_dti2s(cfl_dti_t dti, void *target)
 }
 
 inline cfl_dti_t
-cfl_s2dti(void *source)
+cfl_s2dti(const void *source)
 {
   return endian_read_uint64(source);
 }

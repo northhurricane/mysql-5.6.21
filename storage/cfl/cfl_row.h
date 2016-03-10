@@ -86,6 +86,13 @@ cfl_row_get_nth_field(Field ** fields, uint8_t *cfl_row, uint32_t row_length
 cfl_dti_t
 cfl_row_get_key_data(Field ** fields, uint8_t *cfl_row);
 
+/*
+  比较行的大小
+  返回：
+    0 ，相等
+    -1，row1小于row2
+    1 ，row1大于row2
+*/
 int
 cfl_row_cmp(Field ** fields, const uint8_t *row1, const uint8_t *row2);
 

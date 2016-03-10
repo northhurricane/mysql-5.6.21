@@ -19,6 +19,16 @@ inline void endian_write_uint8(void *target, uint8_t value)
   *((uint8_t*)target) = value;
 }
 
+inline int8_t endian_read_int8(const void *source)
+{
+  return *((int8_t*)source);
+}
+
+inline void endian_write_int8(void *target, int8_t value)
+{
+  *((int8_t*)target) = value;
+}
+
 inline uint16_t endian_read_uint16(const void *source)
 {
   uint16_t value;
@@ -31,10 +41,22 @@ inline void endian_write_uint16(void *target, uint16_t value)
   shortstore(target, value);
 }
 
+inline int16_t endian_read_int16(const void *source)
+{
+  uint16_t value;
+  shortget(value, source);
+  return value;
+}
+
+inline void endian_write_int16(void *target, uint16_t value)
+{
+  shortstore(target, value);
+}
+
 inline uint32_t endian_read_uint32(const void *source)
 {
   uint32_t value;
-  longget(value, source);
+  ulongget(value, source);
   return value;
 }
 
@@ -43,9 +65,28 @@ inline void endian_write_uint32(void *target, uint32_t value)
   longstore(target, value);
 }
 
+inline int32_t endian_read_int32(const void *source)
+{
+  int32_t value;
+  longget(value, source);
+  return value;
+}
+
+inline void endian_write_int32(void *target, int32_t value)
+{
+  longstore(target, value);
+}
+
 inline uint64_t endian_read_uint64(const void *source)
 {
   uint64_t value;
+  longlongget(value, source);
+  return value;
+}
+
+inline int64_t endian_read_int64(const void *source)
+{
+  int64_t value;
   longlongget(value, source);
   return value;
 }
