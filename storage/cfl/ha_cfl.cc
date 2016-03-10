@@ -601,7 +601,7 @@ int ha_cfl::update_row(const uchar *old_data, uchar *new_data)
 int ha_cfl::delete_row(const uchar *buf)
 {
   DBUG_ENTER("ha_cfl::delete_row");
-  //  DBUG_RETURN(HA_ERR_WRONG_COMMAND);
+  DBUG_RETURN(HA_ERR_WRONG_COMMAND);
 
   /*获取删除行的内容*/
   uint8_t cfl_row_buf[65536];
