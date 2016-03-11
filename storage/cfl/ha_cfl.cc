@@ -237,7 +237,7 @@ static int cfl_init_func(void *p)
   cfl_ton= (handlerton *)p;
 
   cfl_init_handlerton(cfl_ton);
-  CflPageManager::Initialize(1, 10);
+  CflPageManager::Initialize(1, 1);
 
   DBUG_RETURN(0);
 }
@@ -642,6 +642,7 @@ int ha_cfl::delete_rows(Field ** fields, cfl_dti_t key
 
   uint8_t *row_to_match;
   int cmp_result;
+  uint32_t modified_counter;
   do
   {
     //步骤1，进行行比较
@@ -650,15 +651,32 @@ int ha_cfl::delete_rows(Field ** fields, cfl_dti_t key
     //步骤2，如果匹配，进行删除，获取下一条记录；否则退出
     if (cmp_result == 0)
     {
+      //删除记录
+      //判断是否需要刷新页面
+      modified_counter++;
+      bool need_flush_page = false;;
+      if (need_flush_page)
+      {
+        //刷出更新页
+        modified_counter = 0;
+      }
     }
     else
     {
+      //是否有数据修改
+      if (modified_counter)
+      {
+        //刷出数据页
+      }
       break;
     }
+    //获取下一条记录
     rc = locate_next(over);
     if (over)
       break;
   } while (true);
+
+  //释放cursor所占用的资源
   return 0;
 }
 
@@ -712,6 +730,9 @@ int ha_cfl::rnd_init(bool scan)
 int ha_cfl::rnd_end()
 {
   DBUG_ENTER("ha_cfl::rnd_end");
+
+  clear_cursor();
+
   DBUG_RETURN(0);
 }
 
@@ -1443,6 +1464,7 @@ int
 ha_cfl::index_end()
 {
   DBUG_ENTER("ha_cfl::index_end");
+  clear_cursor();
   DBUG_RETURN(0);
 }
 
@@ -1477,6 +1499,10 @@ ha_cfl::index_read(uchar * buf, const uchar * key, uint key_len,
   old_map= dbug_tmp_use_all_columns(table, table->write_set);
 
   rc = locate_cursor();
+  if (HA_READ_KEY_EXACT == find_flag && HA_ERR_END_OF_FILE != rc)
+  {
+    rc = index_next(buf);
+  }
 
   dbug_tmp_restore_column_map(table->write_set, old_map);
 
@@ -1817,4 +1843,12 @@ int
 ha_cfl::multi_range_read_next(char **range_info)
 {
   return(ds_mrr.dsmrr_next(range_info));
+}
+
+void ha_cfl::clear_cursor()
+{
+  CflPage *page = cfl_cursor_page_get(cursor_);
+  if (page != NULL)
+    CflPageManager::PutPage(page);
+  cfl_cursor_page_set(cursor_, NULL);
 }
