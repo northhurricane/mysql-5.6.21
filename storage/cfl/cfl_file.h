@@ -60,7 +60,7 @@ cf_size(cf_t *cf);
   -1失败，成功返回写入的字节数
 */
 int
-cf_write(cf_t *cf, uint64_t offset, void *data, int bytes2write);
+cf_write(cf_t *cf, uint64_t offset, const void *data, int bytes2write);
 
 /*
 从文件读取数据

@@ -78,7 +78,7 @@ cf_size(cf_t *cf)
 }
 
 int
-cf_write(cf_t *cf, uint64_t offset, void *data, int bytes2write)
+cf_write(cf_t *cf, uint64_t offset, const void *data, int bytes2write)
 {
   if (bytes2write <= 0)
     return -1;
