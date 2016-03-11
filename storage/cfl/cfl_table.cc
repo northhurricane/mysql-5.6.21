@@ -99,6 +99,12 @@ CflStorage::GetMaxTimestamp()
   return index_->ReadNthIndexNode(index_node_number - 1);
 }
 
+int CflStorage::UpdatePage(uint32_t page_no, const void *page, uint32_t size)
+{
+  //TODO 检查page_no的有效性
+  return data_->UpdatePage(page_no, page, size);
+}
+
 bool
 CflStorage::LocateRow(cfl_dti_t key, enum cfl_key_cmp keycmp
                       , cfl_cursor_t &cursor, Field **fields)
@@ -570,8 +576,13 @@ void CflTable::PutBuffer(CflInsertBuffer* buffer)
 void CflTable::FlushBuffer(CflInsertBuffer* buffer)
 {
   //TODO
-  //buffer加入带插入缓冲区
+  //多线程并发下，buffer加入待插入缓冲区
   //
+}
+
+int CflTable::UpdatePage(uint32_t page_no, const void *page, uint32_t size)
+{
+  return storage_->UpdatePage(page_no, page, size);
 }
 
 

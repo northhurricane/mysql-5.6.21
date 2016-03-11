@@ -69,6 +69,14 @@ public :
   bool LocateRow(cfl_dti_t key, enum cfl_key_cmp keycmp
                  , cfl_cursor_t &cursor, Field **fields);
 
+  /*
+    更新指定页面
+    输入：
+      page_no:0-based。写入的页面编号。page_no必须在已有页的范围内
+      page   :更新页面的内容
+      size   :页面大小
+  */
+  int UpdatePage(uint32_t page_no, const void *page, uint32_t size);
 private :
   CflIndex *index_;
   CflData *data_;
@@ -123,6 +131,14 @@ public :
     将缓冲区中的数据刷入table中，同时归还该缓冲区
   */
   void FlushBuffer(CflInsertBuffer* buffer);
+  /*
+    更新指定页面
+    输入：
+      page_no:0-based。写入的页面编号。page_no必须在已有页的范围内
+      page   :更新页面的内容
+      size   :页面大小
+  */
+  int UpdatePage(uint32_t page_no, const void* page, uint32_t size);
 
 private :
   int Initialize(const char *name);
