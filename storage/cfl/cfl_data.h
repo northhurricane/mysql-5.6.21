@@ -31,6 +31,14 @@ public :
       -1   :读取错误
    */
   int ReadPage(void *buffer, uint32_t buffer_size, uint32_t nth_page);
+  /*
+    更新指定页面
+    输入：
+      page_no:0-based。写入的页面编号。page_no必须在已有页的范围内
+      page   :更新页面的内容
+      size   :页面大小
+  */
+  int UpdatePage(uint32_t nth_page, const void *page, uint32_t size);
 
 private :
   cf_t cf_file_;
