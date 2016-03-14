@@ -601,7 +601,7 @@ int ha_cfl::update_row(const uchar *old_data, uchar *new_data)
 int ha_cfl::delete_row(const uchar *buf)
 {
   DBUG_ENTER("ha_cfl::delete_row");
-  DBUG_RETURN(HA_ERR_WRONG_COMMAND);
+  //DBUG_RETURN(HA_ERR_WRONG_COMMAND);
 
   /*获取删除行的内容*/
   uint8_t cfl_row_buf[65536];
@@ -617,7 +617,7 @@ int ha_cfl::delete_row(const uchar *buf)
   int r;
   r = delete_rows(table->field, key_dti, cfl_row_buf, cfl_row_size);
 
-  DBUG_RETURN(HA_ERR_WRONG_COMMAND);
+  DBUG_RETURN(r);
 }
 
 int ha_cfl::delete_rows(Field ** fields, cfl_dti_t key
@@ -642,7 +642,7 @@ int ha_cfl::delete_rows(Field ** fields, cfl_dti_t key
 
   uint8_t *row_to_match;
   int cmp_result;
-  uint32_t modified_counter;
+  //uint32_t modified_counter;
   do
   {
     //步骤1，进行行比较
@@ -652,30 +652,34 @@ int ha_cfl::delete_rows(Field ** fields, cfl_dti_t key
     if (cmp_result == 0)
     {
       //删除记录
-      //判断是否需要刷新页面
-      modified_counter++;
-      bool need_flush_page = false;;
       CflPage *page = cfl_cursor_page_get(cursor_);
+      uint8_t *page_data = (uint8_t*)page->page();
       DBUG_ASSERT(page != NULL);
-      uint32_t row_count = cfl_page_read_row_count(page);
       uint32_t row_no = cfl_cursor_row_no_get(cursor_);
+      cfl_page_delete_row(page_data, row_no);
+      //TODO 此处可优化效率，减少每次更新行都进行磁盘写入
+      //判断是否需要刷新页面
+      //modified_counter++;
+      //bool need_flush_page = false;;
+      //uint32_t row_count = cfl_page_read_row_count(page);
       uint32_t page_no = cfl_cursor_page_no_get(cursor_);
-      if (row_count == (row_no + 1))
-        need_flush_page = true;
-      if (need_flush_page)
+      
+      //if (row_count == (row_no + 1))
+      //  need_flush_page = true;
+      //if (need_flush_page)
       {
         //将修改的页写入磁盘
-        modified_counter = 0;
-        cfl_table_->UpdatePage(page_no, page, CFL_PAGE_SIZE);
+        //modified_counter = 0;
+        cfl_table_->UpdatePage(page_no, page_data, CFL_PAGE_SIZE);
       }
     }
     else
     {
       //是否有数据修改
-      if (modified_counter)
-      {
+      //if (modified_counter)
+      //{
         //刷出数据页
-      }
+      //}
       break;
     }
     //获取下一条记录
@@ -684,13 +688,13 @@ int ha_cfl::delete_rows(Field ** fields, cfl_dti_t key
       break;
   } while (true);
 
-  if (modified_counter)
+  /*if (modified_counter)
   {
     //将修改的页写入磁盘
     CflPage *page = cfl_cursor_page_get(cursor_);
     uint32_t page_no = cfl_cursor_page_no_get(cursor_);
     cfl_table_->UpdatePage(page_no, page, CFL_PAGE_SIZE);
-  }
+    }*/
 
   //释放cursor所占用的资源
   clear_cursor();
@@ -775,10 +779,12 @@ int ha_cfl::rnd_next(uchar *buf)
   MYSQL_READ_ROW_START(table_share->db.str, table_share->table_name.str,
                        TRUE);
 
-
   bool over;
   int r;
+  //r = next(over);
+  //r = fetch();
   r = fetch_next(over);
+  //over = true;
   if (r < 0)
   {
     //出现错误
@@ -1316,6 +1322,7 @@ next_row :
   }
 
   bool renext = false;
+  renext = check_renext();
   if (renext)
     goto next_row;
 

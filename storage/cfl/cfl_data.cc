@@ -106,7 +106,7 @@ CflData::ReadPage(void *buffer, uint32_t buffer_size, uint32_t nth_page)
 int CflData::UpdatePage(uint32_t nth_page, const void *page, uint32_t size)
 {
   uint64_t offset = 0;
-  offset = curr_page_no_ * CFL_PAGE_SIZE;
+  offset = nth_page * CFL_PAGE_SIZE;
   int r = cf_write(&cf_file_, offset, page, CFL_PAGE_SIZE);
   if (r < 0)
     return -1;

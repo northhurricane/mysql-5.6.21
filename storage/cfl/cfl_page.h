@@ -210,6 +210,21 @@ bool
 cfl_page_locate_row(void *page, Field **fields
                     , cfl_dti_t key, uint32_t *row_no);
 
+/*
+  在页面内删除行
+  参数：
+  page  :行所在的页面
+  row_no:0-base
+*/
+inline void cfl_page_delete_row(uint8_t *page, uint32_t row_no)
+{
+  uint8_t *row_to_del = cfl_page_nth_row(page, row_no);
+  cfl_row_flag_t flag = cfl_row_flag_read(row_to_del);
+  flag = cfl_row_flag_write_deleted(flag, true);
+  cfl_row_flag_write(row_to_del, flag);
+}
+
+
 class CflStorage;
 /*
   已排序的数据写入maker
