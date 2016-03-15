@@ -66,16 +66,6 @@ public:
   }
 };
 
-/*
-  index search struct
-*/
-struct cfl_isearch_struct
-{
-  cfl_dti_t key;
-  enum cfl_key_cmp key_cmp;  
-};
-typedef struct cfl_isearch_struct cfl_isearch_t;
-
 /** @brief
   Class definition for the storage engine
 */

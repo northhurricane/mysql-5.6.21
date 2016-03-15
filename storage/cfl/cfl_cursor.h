@@ -6,8 +6,22 @@
 #define CFL_CURSOR_BEFOR_START (0xFFFFFFFFFFFFFFFF)
 #define CFL_CURSOR_AFTER_END   (0xFFFFFFFFFFFFFFFE)
 
+#include "cfl.h"
 #include "cfl_page.h"
 
+/*
+  index search struct
+*/
+struct cfl_isearch_struct
+{
+  cfl_dti_t key;
+  enum cfl_key_cmp key_cmp;  
+};
+typedef struct cfl_isearch_struct cfl_isearch_t;
+
+/*
+  用于进行记录定位
+*/
 struct cfl_cursor_struct
 {
   uint64_t position;  //1-based.行位置
@@ -107,5 +121,9 @@ cfl_cursor_fill_row(cfl_cursor_t &cursor)
   cfl_cursor_row_set(cursor, row);
   cfl_cursor_row_length_set(cursor, row_length);
 }
+
+int
+cfl_cursor_locate(CflStorage *storage, cfl_cursor_t *cursor
+                  , cfl_isearch_t isearch);
 
 #endif //_CFL_CURSOR_H_
