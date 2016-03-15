@@ -294,6 +294,8 @@ CflStorage::LocateRow(cfl_dti_t key, enum cfl_key_cmp keycmp
   cfl_cursor_row_no_set(cursor, row_no);
   cfl_cursor_page_set(cursor, page);
 
+  cfl_cursor_fill_row(cursor);
+
   return true;
 
 not_found:

@@ -6,7 +6,7 @@
 #define CFL_CURSOR_BEFOR_START (0xFFFFFFFFFFFFFFFF)
 #define CFL_CURSOR_AFTER_END   (0xFFFFFFFFFFFFFFFE)
 
-class CflPage;
+#include "cfl_page.h"
 
 struct cfl_cursor_struct
 {
@@ -91,6 +91,21 @@ inline void
 cfl_cursor_row_length_set(cfl_cursor_t &cursor, uint16_t row_length)
 {
   cursor.row_length = row_length;
+}
+
+inline void
+cfl_cursor_fill_row(cfl_cursor_t &cursor)
+{
+  uint8_t *row;
+  void *page_data;
+  uint32_t row_length;
+
+  DBUG_ASSERT(cursor.page != NULL);
+  page_data = cursor.page->page();
+  row = cfl_page_nth_row((uint8_t*)page_data, cursor.row_no);
+  row_length = cfl_page_nth_row_length((uint8_t*)page_data, cursor.row_no);
+  cfl_cursor_row_set(cursor, row);
+  cfl_cursor_row_length_set(cursor, row_length);
 }
 
 #endif //_CFL_CURSOR_H_

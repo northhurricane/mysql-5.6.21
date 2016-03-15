@@ -128,21 +128,6 @@ inline bool isearch_key_match(const cfl_isearch_t &isearch, cfl_dti_t rowkey)
   return matched;
 }
 
-inline void
-cfl_cursor_fill_row(cfl_cursor_t &cursor)
-{
-  uint8_t *row;
-  void *page_data;
-  uint32_t row_length;
-
-  DBUG_ASSERT(cursor.page != NULL);
-  page_data = cursor.page->page();
-  row = cfl_page_nth_row((uint8_t*)page_data, cursor.row_no);
-  row_length = cfl_page_nth_row_length((uint8_t*)page_data, cursor.row_no);
-  cfl_cursor_row_set(cursor, row);
-  cfl_cursor_row_length_set(cursor, row_length);
-}
-
 static int
 cfl_check_create_info(TABLE *table_arg, HA_CREATE_INFO *create_info)
 {
@@ -1710,9 +1695,33 @@ int ha_cfl::locate_cursor()
   matched = storage->LocateRow(isearch_.key , isearch_.key_cmp
                                , cursor_, table->field);
 
-  isearch_.located = true;
+  if (matched)
+  {
+    //由于存在定位到删除记录上，所以需要拨动定位信息，定位到一个恰当的记录
+    bool renext;
+    bool over = false;
+    //定位第一个可供比较的记录
+    do
+    {
+      renext = check_renext();
+      if (renext)
+        rc = next_physical_row(cfl_table_, cursor_, over);
+      else
+        break;
+    }
+    while  (!over);
+
+    //对定位到的记录，重新做匹配检查
+    if (over)
+      matched = false;
+    else
+      matched = locate_key_match();
+  }
+
+  //检查是否匹配到
   if (!matched)
   {
+    clear_cursor();
     cfl_cursor_position_set(cursor_, CFL_CURSOR_AFTER_END);
     int rc= HA_ERR_END_OF_FILE;
     return rc;
