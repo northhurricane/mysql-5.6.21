@@ -345,22 +345,22 @@ private :
   /*
     通过索引定位后的next
   */
-  int locate_next(bool &over);
-  int locate_next2(bool &over);
+  //int locate_next(bool &over);
+  //int locate_next2(bool &over);
   /*
     获取物理行。所谓的物理行是指在page中存在的行，不论是删除的还是其他状态。
     参数：
       cursor,记录获取记录的位置信息
       over  ,是否在获取下一条记录时结束
   */
-  int next_physical_row(CflTable *table, cfl_cursor_t &cursor, bool &over);
+  //int next_physical_row(CflTable *table, cfl_cursor_t &cursor, bool &over);
   /*
    与next_physical_row功能相同，只是从cursor所指位置向前移动
   */
-  int prev_physical_row(cfl_cursor_t &cursor, bool &over)
+  /*int prev_physical_row(cfl_cursor_t &cursor, bool &over)
   {
     return HA_ERR_WRONG_COMMAND;
-  }
+    }*/
 
   /*
     索引定位时用于用于比较

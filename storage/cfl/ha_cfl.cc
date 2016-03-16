@@ -1544,7 +1544,9 @@ ha_cfl::index_next(uchar *buf)
   int rc = 0;
   bool over = true;
 
-  rc = locate_next2(over);
+  //rc = locate_next2(over);
+  rc = cfl_cursor_locate_next(cfl_table_->GetStorage(), table->field
+                              , cursor_, isearch_, over);
   if (!rc)
   {
     if (over)
@@ -1704,7 +1706,7 @@ int ha_cfl::locate_cursor()
   2016-3-14拆分locate_next函数。抽取出获取物理记录的部分代码为底层函数。
   重新构造locate_next函数
 */
-//#ifdef _USE_IT
+#ifdef _USE_IT
 int
 ha_cfl::locate_next(bool &over)
 {
@@ -1854,9 +1856,9 @@ index_next_over :
 
   return 0;
 }
-//#endif //_USE_IT
+#endif //_USE_IT
 
-//#ifdef _USE_IT
+#ifdef _USE_IT
 int
 ha_cfl::locate_next2(bool &over)
 {
@@ -1949,8 +1951,9 @@ ha_cfl::locate_next2(bool &over)
 
   return 0;
 }
-//#endif //_USE_IT
+#endif //_USE_IT
 
+#ifdef _USE_IT
 int ha_cfl::next_physical_row(CflTable *table, cfl_cursor_t &cursor
                               , bool &over)
 {
@@ -2014,6 +2017,7 @@ int ha_cfl::next_physical_row(CflTable *table, cfl_cursor_t &cursor
 
   return 0;
 }
+#endif //_USE_IT
 
 bool ha_cfl::locate_key_match()
 {
