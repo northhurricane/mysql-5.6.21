@@ -751,7 +751,8 @@ int ha_cfl::rnd_end()
 {
   DBUG_ENTER("ha_cfl::rnd_end");
 
-  clear_cursor();
+  cfl_cursor_clear(cursor_);
+  //clear_cursor();
 
   DBUG_RETURN(0);
 }
@@ -1487,7 +1488,8 @@ int
 ha_cfl::index_end()
 {
   DBUG_ENTER("ha_cfl::index_end");
-  clear_cursor();
+  //clear_cursor();
+  cfl_cursor_clear(cursor_);
   DBUG_RETURN(0);
 }
 
@@ -1521,7 +1523,9 @@ ha_cfl::index_read(uchar * buf, const uchar * key, uint key_len,
 
   old_map= dbug_tmp_use_all_columns(table, table->write_set);
 
-  rc = locate_cursor();
+  //rc = locate_cursor();
+  rc = cfl_cursor_locate(cfl_table_->GetStorage(), table->field
+                         , cursor_, isearch_);
   if (HA_READ_KEY_EXACT == find_flag && HA_ERR_END_OF_FILE != rc)
   {
     rc = index_next(buf);
@@ -1611,12 +1615,12 @@ int ha_cfl::index_first(uchar *buf)
 
   my_bitmap_map *old_map;
   old_map= dbug_tmp_use_all_columns(table, table->write_set);
-  rc = locate_cursor();
-  index_next(buf);
+  rc = cfl_cursor_locate(cfl_table_->GetStorage(), table->field
+                         ,cursor_, isearch_);
+  //rc = locate_cursor();
+  rc = index_next(buf);
   dbug_tmp_restore_column_map(table->write_set, old_map);
 
-  //rc = HA_ERR_END_OF_FILE;
-  //rc = rnd_next(buf);
   MYSQL_INDEX_READ_ROW_DONE(rc);
   DBUG_RETURN(rc);
 }
@@ -1647,6 +1651,7 @@ int ha_cfl::index_last(uchar *buf)
 索引key：index_read传入的用于查询的key值
 页面key：数据文件中每个页面对应的key（参考cfl_index.h中使用key的说明）
 */
+/*
 int ha_cfl::locate_cursor()
 {
   int rc = 0;
@@ -1684,7 +1689,8 @@ int ha_cfl::locate_cursor()
   //检查是否匹配到
   if (!matched)
   {
-    clear_cursor();
+    //clear_cursor();
+    cfl_cursor_clear(cursor_);
     cfl_cursor_position_set(cursor_, CFL_CURSOR_AFTER_END);
     int rc= HA_ERR_END_OF_FILE;
     return rc;
@@ -1692,6 +1698,7 @@ int ha_cfl::locate_cursor()
 
   return rc;
 }
+*/
 
 /*
   2016-3-14拆分locate_next函数。抽取出获取物理记录的部分代码为底层函数。
@@ -2065,10 +2072,3 @@ ha_cfl::multi_range_read_next(char **range_info)
   return(ds_mrr.dsmrr_next(range_info));
 }
 
-void ha_cfl::clear_cursor()
-{
-  CflPage *page = cfl_cursor_page_get(cursor_);
-  if (page != NULL)
-    CflPageManager::PutPage(page);
-  cfl_cursor_page_set(cursor_, NULL);
-}

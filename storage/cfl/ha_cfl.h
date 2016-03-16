@@ -341,7 +341,7 @@ private :
   /*
     根据isearch_中的信息，进行cursor定位，在cursor_中确定记录的位置
   */
-  int locate_cursor();
+  //int locate_cursor();
   /*
     通过索引定位后的next
   */
@@ -376,7 +376,7 @@ private :
   int delete_rows(Field ** fields, cfl_dti_t key
                   , const uint8_t *row, uint32_t row_size);
   /*清除查询结束后cursor上的资源*/
-  void clear_cursor();
+  //void clear_cursor();
   /*
     进行table的统计信息构造
   */
