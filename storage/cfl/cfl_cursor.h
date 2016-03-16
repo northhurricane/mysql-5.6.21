@@ -9,6 +9,8 @@
 #include "cfl.h"
 #include "cfl_page.h"
 
+class CflStorage;
+
 /*
   index search struct
 */
@@ -43,7 +45,7 @@ inline void cfl_cursor_init(cfl_cursor_t &cursor)
   cursor.row = NULL;
 }
 
-inline uint64_t cfl_cursor_position_get(cfl_cursor_t &cursor)
+inline uint64_t cfl_cursor_position_get(const cfl_cursor_t &cursor)
 {
   return cursor.position;
 }
@@ -53,7 +55,7 @@ inline void cfl_cursor_position_set(cfl_cursor_t &cursor, uint64_t pos)
   cursor.position = pos;
 }
 
-inline uint32_t cfl_cursor_page_no_get(cfl_cursor_t &cursor)
+inline uint32_t cfl_cursor_page_no_get(const cfl_cursor_t &cursor)
 {
   return cursor.page_no;
 }
@@ -63,7 +65,7 @@ inline void cfl_cursor_page_no_set(cfl_cursor_t &cursor, uint32_t page_no)
   cursor.page_no = page_no;
 }
 
-inline uint32_t cfl_cursor_row_no_get(cfl_cursor_t &cursor)
+inline uint32_t cfl_cursor_row_no_get(const cfl_cursor_t &cursor)
 {
   return cursor.row_no;
 }
@@ -73,7 +75,7 @@ inline void cfl_cursor_row_no_set(cfl_cursor_t &cursor, uint32_t row_no)
   cursor.row_no = row_no;
 }
 
-inline CflPage* cfl_cursor_page_get(cfl_cursor_t &cursor)
+inline CflPage* cfl_cursor_page_get(const cfl_cursor_t &cursor)
 {
   return cursor.page;
 }
@@ -84,7 +86,7 @@ inline void cfl_cursor_page_set(cfl_cursor_t &cursor, CflPage *page)
 }
 
 inline uint8_t*
-cfl_cursor_row_get(cfl_cursor_t &cursor)
+cfl_cursor_row_get(const cfl_cursor_t &cursor)
 {
   return cursor.row;
 }
@@ -96,7 +98,7 @@ cfl_cursor_row_set(cfl_cursor_t &cursor, uint8_t *row)
 }
 
 inline uint16_t
-cfl_cursor_row_length_get(cfl_cursor_t &cursor)
+cfl_cursor_row_length_get(const cfl_cursor_t &cursor)
 {
   return cursor.row_length;
 }
@@ -122,8 +124,75 @@ cfl_cursor_fill_row(cfl_cursor_t &cursor)
   cfl_cursor_row_length_set(cursor, row_length);
 }
 
+
+inline bool isearch_key_match(const cfl_isearch_t &isearch, cfl_dti_t rowkey)
+{
+  //比较该记录的key，是否符合isearch中比较的。如果不符合，则说明所有记录已经
+  //完成获取。将cursor的position设置为CFL_CURSOR_AFTER_END
+  bool matched;
+  switch (isearch.key_cmp)
+  {
+  case KEY_EQUAL:
+    if (rowkey != isearch.key)
+      matched = false;
+    else
+      matched = true;
+    break;
+  case KEY_GE:
+  case KEY_G:
+    matched = true;
+    break;
+  case KEY_LE:
+    if (rowkey <= isearch.key)
+      matched = true;
+    else
+      matched = false;
+    break;
+  case KEY_L:
+    if (rowkey < isearch.key)
+      matched = true;
+    else
+      matched = false;
+    break;
+  default:
+    DBUG_ASSERT(false);
+    matched = false;
+  }
+  return matched;
+}
+
+/*
+  清除cursor上的资源
+*/
+inline void cfl_cursor_clear(cfl_cursor_t &cursor)
+{
+  CflPage *page = cfl_cursor_page_get(cursor);
+  if (page != NULL)
+    CflPageManager::PutPage(page);
+  cfl_cursor_page_set(cursor, NULL);
+}
+
+/*
+  在指定的存储对象上进行搜索定位
+  参数:
+    storage,进行定位的存储对象
+    cursor ,定位信息保存的位置
+    isearch,进行定位比较的信息
+*/
 int
-cfl_cursor_locate(CflStorage *storage, cfl_cursor_t *cursor
-                  , cfl_isearch_t isearch);
+cfl_cursor_locate(CflStorage *storage, Field **field
+                  , cfl_cursor_t &cursor, cfl_isearch_t isearch);
+
+int
+cfl_cursor_locate_next(CflStorage *storage, Field **field
+                       , cfl_cursor_t &cursor , cfl_isearch_t isearch
+                       , bool &over);
+/////////////////////////////////
+inline void
+cfl_isearch_init(cfl_isearch_t &isearch)
+{
+  isearch.key = 0;
+  isearch.key_cmp = KEY_EQUAL;
+}
 
 #endif //_CFL_CURSOR_H_

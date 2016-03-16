@@ -85,49 +85,6 @@ static handler *cfl_create_handler(handlerton *hton,
                                    MEM_ROOT *mem_root);
 
 
-inline void
-cfl_isearch_init(cfl_isearch_t &isearch)
-{
-  isearch.key = 0;
-  isearch.key_cmp = KEY_EQUAL;
-}
-
-inline bool isearch_key_match(const cfl_isearch_t &isearch, cfl_dti_t rowkey)
-{
-  //比较该记录的key，是否符合isearch中比较的。如果不符合，则说明所有记录已经
-  //完成获取。将cursor的position设置为CFL_CURSOR_AFTER_END
-  bool matched;
-  switch (isearch.key_cmp)
-  {
-  case KEY_EQUAL:
-    if (rowkey != isearch.key)
-      matched = false;
-    else
-      matched = true;
-    break;
-  case KEY_GE:
-  case KEY_G:
-    matched = true;
-    break;
-  case KEY_LE:
-    if (rowkey <= isearch.key)
-      matched = true;
-    else
-      matched = false;
-    break;
-  case KEY_L:
-    if (rowkey < isearch.key)
-      matched = true;
-    else
-      matched = false;
-    break;
-  default:
-    DBUG_ASSERT(false);
-    matched = false;
-  }
-  return matched;
-}
-
 static int
 cfl_check_create_info(TABLE *table_arg, HA_CREATE_INFO *create_info)
 {
@@ -660,17 +617,22 @@ int ha_cfl::delete_rows(Field ** fields, cfl_dti_t key
                         , const uint8_t *row, uint32_t row_size)
 {
   //根据key进行定位，获取第一条匹配key的记录
-  cfl_cursor_init(cursor_);
-  isearch_.key = key;
-  isearch_.key_cmp = KEY_EQUAL;
-  int rc = locate_cursor();
+  cfl_cursor_t cursor;
+  cfl_isearch_t isearch;
+
+  cfl_cursor_init(cursor);
+  isearch.key = key;
+  isearch.key_cmp = KEY_EQUAL;
+  int rc = cfl_cursor_locate(cfl_table_->GetStorage(), table->field
+                             , cursor, isearch);
   if (rc == HA_ERR_END_OF_FILE)
   {
     return 0;
   }
 
   bool over;
-  rc = locate_next2(over);
+  rc = cfl_cursor_locate_next(cfl_table_->GetStorage(), table->field
+                              , cursor, isearch, over);
   if (over)
   {
     return 0;
@@ -719,7 +681,8 @@ int ha_cfl::delete_rows(Field ** fields, cfl_dti_t key
       break;
     }
     //获取下一条记录
-    rc = locate_next2(over);
+    rc = cfl_cursor_locate_next(cfl_table_->GetStorage(), table->field
+                                , cursor, isearch, over);
     if (over)
       break;
   } while (true);
@@ -733,7 +696,7 @@ int ha_cfl::delete_rows(Field ** fields, cfl_dti_t key
     }*/
 
   //释放cursor所占用的资源
-  clear_cursor();
+  cfl_cursor_clear(cursor);
   return 0;
 }
 
