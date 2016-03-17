@@ -232,3 +232,92 @@ cfl_cursor_locate_next(CflStorage *storage, Field **field
 
   return 0;
 }
+
+int
+cfl_cursor_next(CflStorage *storage, cfl_cursor_t &cursor, bool &over)
+{
+  /*page_no, row_no, page此定位最后的记录*/
+  uint32_t page_no;
+  uint32_t row_no;
+  CflPage *page = NULL;
+  /*
+    算法说明
+      page_no和row_no进行下一行的定位标识
+      进入next的时候存在3种情况
+        1、从未获取过记录，此时cursor的postion为CFL_CURSOR_BEFOR_START
+        2、所有记录已经获取，此时cursor的postion为CFL_CURSOR_AFTER_END
+        3、获取其中记录。此时cursor的postion为获取的记录数
+    实现说明
+      CflPage的申请和释放要注意，不要造成未释放的页面存在
+  */
+  over = false;
+  if (cfl_cursor_position_get(cursor) == CFL_CURSOR_BEFOR_START)
+  {
+    /*情况1处理*/
+    page_no = 0;
+    row_no = 0;
+    page = CflPageManager::GetPage(storage, page_no);
+    //尝试获取第一页，如果不存在，则设为CFL_CURSOR_AFTER_END
+    if (page == NULL)
+    {
+      over = true;
+      cfl_cursor_position_set(cursor, CFL_CURSOR_AFTER_END);
+      return 0;
+    }
+    cfl_cursor_page_set(cursor, page);
+    cfl_cursor_page_no_set(cursor, page_no);
+    cfl_cursor_row_no_set(cursor, row_no);
+    cfl_cursor_fill_row(cursor);
+
+    //判断当前cursor需要拨动指针到下一条
+    bool renext = check_renext(cursor);
+    if (!renext)
+    {
+      cfl_cursor_position_set(cursor, 1);
+      return 0;
+    }
+  }
+  else if (cfl_cursor_position_get(cursor) == CFL_CURSOR_AFTER_END)
+  {
+    /*情况2处理*/
+    over = true;
+    return 0;
+  }
+
+  int rc;
+  do
+  {
+    rc = next_physical_row(storage, cursor, over);
+    if (!rc)
+    {
+      //错误处理
+    }
+    if (over)
+    {
+      //不存在下一条记录
+      break;
+    }
+    bool renext = false;
+    renext = check_renext(cursor);
+    if (!renext)
+      break;
+  } while (true);
+
+  if (over)
+  {
+    cfl_cursor_clear(cursor);
+    cfl_cursor_page_set(cursor, NULL);
+    cfl_cursor_page_no_set(cursor, 0);
+    cfl_cursor_row_no_set(cursor, 0);
+    cfl_cursor_position_set(cursor, CFL_CURSOR_AFTER_END);
+  }
+  else
+  {
+    uint64_t position = 0;
+    position = cfl_cursor_position_get(cursor);
+    position++;
+    cfl_cursor_position_set(cursor, position);
+  }
+
+  return rc;
+}

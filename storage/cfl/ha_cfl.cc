@@ -780,15 +780,16 @@ int ha_cfl::rnd_next(uchar *buf)
                        TRUE);
 
   bool over;
-  int r;
+  int r = 0;
   //r = next(over);
   //r = fetch();
-  r = fetch_next(over);
+  //r = fetch_next(over);
   //over = true;
   if (r < 0)
   {
     //出现错误
   }
+  r = cfl_cursor_next(cfl_table_->GetStorage(), cursor_, over);
 
   if (over)
   {
@@ -1288,6 +1289,7 @@ mysql_declare_plugin_end;
 
 
 /*cfl private handler function*/
+#ifdef _USE_IT
 int
 ha_cfl::fetch_next(bool &over)
 {
@@ -1470,6 +1472,7 @@ ha_cfl::check_renext()
     return true;
   return false;
 }
+#endif //
 
 int
 ha_cfl::index_init(uint idx, bool sorted)
@@ -2017,7 +2020,6 @@ int ha_cfl::next_physical_row(CflTable *table, cfl_cursor_t &cursor
 
   return 0;
 }
-#endif //_USE_IT
 
 bool ha_cfl::locate_key_match()
 {
@@ -2026,6 +2028,7 @@ bool ha_cfl::locate_key_match()
   rowkey = cfl_row_get_key_data(table->field, row);
   return isearch_key_match(isearch_, rowkey);
 }
+#endif //_USE_IT
 
 void
 ha_cfl::statistic()

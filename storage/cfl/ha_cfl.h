@@ -329,15 +329,15 @@ private :
     返回值:
       返回0，正确执行；小于0，执行错误。
   */
-  int fetch_next(bool &over);
+  //int fetch_next(bool &over);
   /*
     定位到下一条记录。
   */
-  int next(bool &over);
+  //int next(bool &over);
   /*
     取得页面内行的数据。
   */
-  int fetch();
+  //int fetch();
   /*
     根据isearch_中的信息，进行cursor定位，在cursor_中确定记录的位置
   */
@@ -365,11 +365,11 @@ private :
   /*
     索引定位时用于用于比较
   */
-  bool locate_key_match();
+  //bool locate_key_match();
   /*
     检查是否需要移动当前记录到下一条
   */
-  bool check_renext();
+  //bool check_renext();
   /*
     删除匹配的记录
   */

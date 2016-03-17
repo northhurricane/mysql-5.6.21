@@ -173,16 +173,35 @@ inline void cfl_cursor_clear(cfl_cursor_t &cursor)
 }
 
 /*
+  将游标向后移动一个记录
+*/
+int
+cfl_cursor_next(CflStorage *storage, cfl_cursor_t &cursor, bool &over);
+
+/*
   在指定的存储对象上进行搜索定位
   参数:
     storage,进行定位的存储对象
+    field  ,存储对应的列描述
     cursor ,定位信息保存的位置
     isearch,进行定位比较的信息
+  返回值:
+    0,表示成功
+    HA_ERR_END_OF_FILE,表示未定位到数据
 */
 int
 cfl_cursor_locate(CflStorage *storage, Field **field
                   , cfl_cursor_t &cursor, cfl_isearch_t isearch);
 
+/*
+  将游标向后移动一个记录
+  参数:
+    storage,进行定位的存储对象
+    field  ,存储对应的列描述
+    cursor ,定位信息保存的位置
+    isearch,进行定位比较的信息
+    over   ,输出参数，是否结束。true，表示无法获取下一条记录
+*/
 int
 cfl_cursor_locate_next(CflStorage *storage, Field **field
                        , cfl_cursor_t &cursor , cfl_isearch_t isearch
