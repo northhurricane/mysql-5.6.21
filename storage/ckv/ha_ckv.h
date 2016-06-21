@@ -37,15 +37,15 @@
 #include "my_base.h"                     /* ha_rows */
 
 /** @brief
-  Example_share is a class that will be shared among all open handlers.
+  Ckv_share is a class that will be shared among all open handlers.
   This example implements the minimum of what you will probably need.
 */
-class Example_share : public Handler_share {
+class Ckv_share : public Handler_share {
 public:
   mysql_mutex_t mutex;
   THR_LOCK lock;
-  Example_share();
-  ~Example_share()
+  Ckv_share();
+  ~Ckv_share()
   {
     thr_lock_delete(&lock);
     mysql_mutex_destroy(&mutex);
@@ -58,8 +58,8 @@ public:
 class ha_example: public handler
 {
   THR_LOCK_DATA lock;      ///< MySQL lock
-  Example_share *share;    ///< Shared lock info
-  Example_share *get_share(); ///< Get the share
+  Ckv_share *share;    ///< Shared lock info
+  Ckv_share *get_share(); ///< Get the share
 
 public:
   ha_example(handlerton *hton, TABLE_SHARE *table_arg);

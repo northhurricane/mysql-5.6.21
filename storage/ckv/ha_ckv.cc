@@ -122,7 +122,7 @@ static void init_example_psi_keys()
 }
 #endif
 
-Example_share::Example_share()
+Ckv_share::Ckv_share()
 {
   thr_lock_init(&lock);
   mysql_mutex_init(ex_key_mutex_Example_share_mutex,
@@ -157,16 +157,16 @@ static int example_init_func(void *p)
   they are needed to function.
 */
 
-Example_share *ha_example::get_share()
+Ckv_share *ha_example::get_share()
 {
-  Example_share *tmp_share;
+  Ckv_share *tmp_share;
 
   DBUG_ENTER("ha_example::get_share()");
 
   lock_shared_ha_data();
-  if (!(tmp_share= static_cast<Example_share*>(get_ha_share_ptr())))
+  if (!(tmp_share= static_cast<Ckv_share*>(get_ha_share_ptr())))
   {
-    tmp_share= new Example_share;
+    tmp_share= new Ckv_share;
     if (!tmp_share)
       goto err;
 
