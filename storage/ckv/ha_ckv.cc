@@ -14,16 +14,16 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA */
 
 /**
-  @file ha_example.cc
+  @file ha_ckv.cc
 
   @brief
-  The ha_example engine is a stubbed storage engine for example purposes only;
+  The ha_ckv engine is a stubbed storage engine for example purposes only;
   it does nothing at this point. Its purpose is to provide a source
   code illustration of how to begin writing new storage engines; see also
-  /storage/example/ha_example.h.
+  /storage/example/ha_ckv.h.
 
   @details
-  ha_example will let you create/open/delete tables, but
+  ha_ckv will let you create/open/delete tables, but
   nothing further (for example, indexes are not supported nor can data
   be stored in the table). Use this example as a template for
   implementing the same functionality in your own storage engine. You
@@ -40,7 +40,7 @@
   example handler object will be able to see when it is using that
   table.
 
-  Please read the object definition in ha_example.h before reading the rest
+  Please read the object definition in ha_ckv.h before reading the rest
   of this file.
 
   @note
@@ -51,33 +51,33 @@
   table:
 
   @code
-  ha_example::store_lock
-  ha_example::external_lock
-  ha_example::info
-  ha_example::rnd_init
-  ha_example::extra
+  ha_ckv::store_lock
+  ha_ckv::external_lock
+  ha_ckv::info
+  ha_ckv::rnd_init
+  ha_ckv::extra
   ENUM HA_EXTRA_CACHE        Cache record in HA_rrnd()
-  ha_example::rnd_next
-  ha_example::rnd_next
-  ha_example::rnd_next
-  ha_example::rnd_next
-  ha_example::rnd_next
-  ha_example::rnd_next
-  ha_example::rnd_next
-  ha_example::rnd_next
-  ha_example::rnd_next
-  ha_example::extra
+  ha_ckv::rnd_next
+  ha_ckv::rnd_next
+  ha_ckv::rnd_next
+  ha_ckv::rnd_next
+  ha_ckv::rnd_next
+  ha_ckv::rnd_next
+  ha_ckv::rnd_next
+  ha_ckv::rnd_next
+  ha_ckv::rnd_next
+  ha_ckv::extra
   ENUM HA_EXTRA_NO_CACHE     End caching of records (def)
-  ha_example::external_lock
-  ha_example::extra
+  ha_ckv::external_lock
+  ha_ckv::extra
   ENUM HA_EXTRA_RESET        Reset database to after open
   @endcode
 
   Here you see that the example storage engine has 9 rows called before
   rnd_next signals that it has reached the end of its data. Also note that
   the table in question was already opened; had it not been open, a call to
-  ha_example::open() would also have been necessary. Calls to
-  ha_example::extra() are hints as to what will be occuring to the request.
+  ha_ckv::open() would also have been necessary. Calls to
+  ha_ckv::extra() are hints as to what will be occuring to the request.
 
   A Longer Example can be found called the "Skeleton Engine" which can be 
   found on TangentOrg. It has both an engine and a full build environment
@@ -157,11 +157,11 @@ static int example_init_func(void *p)
   they are needed to function.
 */
 
-Ckv_share *ha_example::get_share()
+Ckv_share *ha_ckv::get_share()
 {
   Ckv_share *tmp_share;
 
-  DBUG_ENTER("ha_example::get_share()");
+  DBUG_ENTER("ha_ckv::get_share()");
 
   lock_shared_ha_data();
   if (!(tmp_share= static_cast<Ckv_share*>(get_ha_share_ptr())))
@@ -182,10 +182,10 @@ static handler* example_create_handler(handlerton *hton,
                                        TABLE_SHARE *table, 
                                        MEM_ROOT *mem_root)
 {
-  return new (mem_root) ha_example(hton, table);
+  return new (mem_root) ha_ckv(hton, table);
 }
 
-ha_example::ha_example(handlerton *hton, TABLE_SHARE *table_arg)
+ha_ckv::ha_ckv(handlerton *hton, TABLE_SHARE *table_arg)
   :handler(hton, table_arg)
 {}
 
@@ -212,7 +212,7 @@ static const char *ha_example_exts[] = {
   NullS
 };
 
-const char **ha_example::bas_ext() const
+const char **ha_ckv::bas_ext() const
 {
   return ha_example_exts;
 }
@@ -293,9 +293,9 @@ static bool example_is_supported_system_table(const char *db,
   handler::ha_open() in handler.cc
 */
 
-int ha_example::open(const char *name, int mode, uint test_if_locked)
+int ha_ckv::open(const char *name, int mode, uint test_if_locked)
 {
-  DBUG_ENTER("ha_example::open");
+  DBUG_ENTER("ha_ckv::open");
 
   if (!(share = get_share()))
     DBUG_RETURN(1);
@@ -320,9 +320,9 @@ int ha_example::open(const char *name, int mode, uint test_if_locked)
   sql_base.cc, sql_select.cc and table.cc
 */
 
-int ha_example::close(void)
+int ha_ckv::close(void)
 {
-  DBUG_ENTER("ha_example::close");
+  DBUG_ENTER("ha_ckv::close");
   DBUG_RETURN(0);
 }
 
@@ -357,9 +357,9 @@ int ha_example::close(void)
   sql_insert.cc, sql_select.cc, sql_table.cc, sql_udf.cc and sql_update.cc
 */
 
-int ha_example::write_row(uchar *buf)
+int ha_ckv::write_row(uchar *buf)
 {
-  DBUG_ENTER("ha_example::write_row");
+  DBUG_ENTER("ha_ckv::write_row");
   /*
     Example of a successful write_row. We don't store the data
     anywhere; they are thrown away. A real implementation will
@@ -393,10 +393,10 @@ int ha_example::write_row(uchar *buf)
   @see
   sql_select.cc, sql_acl.cc, sql_update.cc and sql_insert.cc
 */
-int ha_example::update_row(const uchar *old_data, uchar *new_data)
+int ha_ckv::update_row(const uchar *old_data, uchar *new_data)
 {
 
-  DBUG_ENTER("ha_example::update_row");
+  DBUG_ENTER("ha_ckv::update_row");
   DBUG_RETURN(HA_ERR_WRONG_COMMAND);
 }
 
@@ -421,9 +421,9 @@ int ha_example::update_row(const uchar *old_data, uchar *new_data)
   sql_acl.cc, sql_udf.cc, sql_delete.cc, sql_insert.cc and sql_select.cc
 */
 
-int ha_example::delete_row(const uchar *buf)
+int ha_ckv::delete_row(const uchar *buf)
 {
-  DBUG_ENTER("ha_example::delete_row");
+  DBUG_ENTER("ha_ckv::delete_row");
   DBUG_RETURN(HA_ERR_WRONG_COMMAND);
 }
 
@@ -435,13 +435,13 @@ int ha_example::delete_row(const uchar *buf)
   index.
 */
 
-int ha_example::index_read_map(uchar *buf, const uchar *key,
+int ha_ckv::index_read_map(uchar *buf, const uchar *key,
                                key_part_map keypart_map __attribute__((unused)),
                                enum ha_rkey_function find_flag
                                __attribute__((unused)))
 {
   int rc;
-  DBUG_ENTER("ha_example::index_read");
+  DBUG_ENTER("ha_ckv::index_read");
   MYSQL_INDEX_READ_ROW_START(table_share->db.str, table_share->table_name.str);
   rc= HA_ERR_WRONG_COMMAND;
   MYSQL_INDEX_READ_ROW_DONE(rc);
@@ -454,10 +454,10 @@ int ha_example::index_read_map(uchar *buf, const uchar *key,
   Used to read forward through the index.
 */
 
-int ha_example::index_next(uchar *buf)
+int ha_ckv::index_next(uchar *buf)
 {
   int rc;
-  DBUG_ENTER("ha_example::index_next");
+  DBUG_ENTER("ha_ckv::index_next");
   MYSQL_INDEX_READ_ROW_START(table_share->db.str, table_share->table_name.str);
   rc= HA_ERR_WRONG_COMMAND;
   MYSQL_INDEX_READ_ROW_DONE(rc);
@@ -470,10 +470,10 @@ int ha_example::index_next(uchar *buf)
   Used to read backwards through the index.
 */
 
-int ha_example::index_prev(uchar *buf)
+int ha_ckv::index_prev(uchar *buf)
 {
   int rc;
-  DBUG_ENTER("ha_example::index_prev");
+  DBUG_ENTER("ha_ckv::index_prev");
   MYSQL_INDEX_READ_ROW_START(table_share->db.str, table_share->table_name.str);
   rc= HA_ERR_WRONG_COMMAND;
   MYSQL_INDEX_READ_ROW_DONE(rc);
@@ -491,10 +491,10 @@ int ha_example::index_prev(uchar *buf)
   @see
   opt_range.cc, opt_sum.cc, sql_handler.cc and sql_select.cc
 */
-int ha_example::index_first(uchar *buf)
+int ha_ckv::index_first(uchar *buf)
 {
   int rc;
-  DBUG_ENTER("ha_example::index_first");
+  DBUG_ENTER("ha_ckv::index_first");
   MYSQL_INDEX_READ_ROW_START(table_share->db.str, table_share->table_name.str);
   rc= HA_ERR_WRONG_COMMAND;
   MYSQL_INDEX_READ_ROW_DONE(rc);
@@ -512,10 +512,10 @@ int ha_example::index_first(uchar *buf)
   @see
   opt_range.cc, opt_sum.cc, sql_handler.cc and sql_select.cc
 */
-int ha_example::index_last(uchar *buf)
+int ha_ckv::index_last(uchar *buf)
 {
   int rc;
-  DBUG_ENTER("ha_example::index_last");
+  DBUG_ENTER("ha_ckv::index_last");
   MYSQL_INDEX_READ_ROW_START(table_share->db.str, table_share->table_name.str);
   rc= HA_ERR_WRONG_COMMAND;
   MYSQL_INDEX_READ_ROW_DONE(rc);
@@ -536,15 +536,15 @@ int ha_example::index_last(uchar *buf)
   @see
   filesort.cc, records.cc, sql_handler.cc, sql_select.cc, sql_table.cc and sql_update.cc
 */
-int ha_example::rnd_init(bool scan)
+int ha_ckv::rnd_init(bool scan)
 {
-  DBUG_ENTER("ha_example::rnd_init");
+  DBUG_ENTER("ha_ckv::rnd_init");
   DBUG_RETURN(0);
 }
 
-int ha_example::rnd_end()
+int ha_ckv::rnd_end()
 {
-  DBUG_ENTER("ha_example::rnd_end");
+  DBUG_ENTER("ha_ckv::rnd_end");
   DBUG_RETURN(0);
 }
 
@@ -563,10 +563,10 @@ int ha_example::rnd_end()
   @see
   filesort.cc, records.cc, sql_handler.cc, sql_select.cc, sql_table.cc and sql_update.cc
 */
-int ha_example::rnd_next(uchar *buf)
+int ha_ckv::rnd_next(uchar *buf)
 {
   int rc;
-  DBUG_ENTER("ha_example::rnd_next");
+  DBUG_ENTER("ha_ckv::rnd_next");
   MYSQL_READ_ROW_START(table_share->db.str, table_share->table_name.str,
                        TRUE);
   rc= HA_ERR_END_OF_FILE;
@@ -596,9 +596,9 @@ int ha_example::rnd_next(uchar *buf)
   @see
   filesort.cc, sql_select.cc, sql_delete.cc and sql_update.cc
 */
-void ha_example::position(const uchar *record)
+void ha_ckv::position(const uchar *record)
 {
-  DBUG_ENTER("ha_example::position");
+  DBUG_ENTER("ha_ckv::position");
   DBUG_VOID_RETURN;
 }
 
@@ -616,10 +616,10 @@ void ha_example::position(const uchar *record)
   @see
   filesort.cc, records.cc, sql_insert.cc, sql_select.cc and sql_update.cc
 */
-int ha_example::rnd_pos(uchar *buf, uchar *pos)
+int ha_ckv::rnd_pos(uchar *buf, uchar *pos)
 {
   int rc;
-  DBUG_ENTER("ha_example::rnd_pos");
+  DBUG_ENTER("ha_ckv::rnd_pos");
   MYSQL_READ_ROW_START(table_share->db.str, table_share->table_name.str,
                        TRUE);
   rc= HA_ERR_WRONG_COMMAND;
@@ -666,9 +666,9 @@ int ha_example::rnd_pos(uchar *buf, uchar *pos)
   sql_select.cc, sql_show.cc, sql_show.cc, sql_show.cc, sql_show.cc, sql_table.cc,
   sql_union.cc and sql_update.cc
 */
-int ha_example::info(uint flag)
+int ha_ckv::info(uint flag)
 {
-  DBUG_ENTER("ha_example::info");
+  DBUG_ENTER("ha_ckv::info");
   DBUG_RETURN(0);
 }
 
@@ -682,9 +682,9 @@ int ha_example::info(uint flag)
     @see
   ha_innodb.cc
 */
-int ha_example::extra(enum ha_extra_function operation)
+int ha_ckv::extra(enum ha_extra_function operation)
 {
-  DBUG_ENTER("ha_example::extra");
+  DBUG_ENTER("ha_ckv::extra");
   DBUG_RETURN(0);
 }
 
@@ -708,9 +708,9 @@ int ha_example::extra(enum ha_extra_function operation)
   JOIN::reinit() in sql_select.cc and
   st_select_lex_unit::exec() in sql_union.cc.
 */
-int ha_example::delete_all_rows()
+int ha_ckv::delete_all_rows()
 {
-  DBUG_ENTER("ha_example::delete_all_rows");
+  DBUG_ENTER("ha_ckv::delete_all_rows");
   DBUG_RETURN(HA_ERR_WRONG_COMMAND);
 }
 
@@ -731,9 +731,9 @@ int ha_example::delete_all_rows()
   Truncate_statement in sql_truncate.cc
   Remarks in handler::truncate.
 */
-int ha_example::truncate()
+int ha_ckv::truncate()
 {
-  DBUG_ENTER("ha_example::truncate");
+  DBUG_ENTER("ha_ckv::truncate");
   DBUG_RETURN(HA_ERR_WRONG_COMMAND);
 }
 
@@ -755,9 +755,9 @@ int ha_example::truncate()
   the section "locking functions for mysql" in lock.cc;
   copy_data_between_tables() in sql_table.cc.
 */
-int ha_example::external_lock(THD *thd, int lock_type)
+int ha_ckv::external_lock(THD *thd, int lock_type)
 {
-  DBUG_ENTER("ha_example::external_lock");
+  DBUG_ENTER("ha_ckv::external_lock");
   DBUG_RETURN(0);
 }
 
@@ -799,7 +799,7 @@ int ha_example::external_lock(THD *thd, int lock_type)
   @see
   get_lock_data() in lock.cc
 */
-THR_LOCK_DATA **ha_example::store_lock(THD *thd,
+THR_LOCK_DATA **ha_ckv::store_lock(THD *thd,
                                        THR_LOCK_DATA **to,
                                        enum thr_lock_type lock_type)
 {
@@ -829,9 +829,9 @@ THR_LOCK_DATA **ha_example::store_lock(THD *thd,
   @see
   delete_table and ha_create_table() in handler.cc
 */
-int ha_example::delete_table(const char *name)
+int ha_ckv::delete_table(const char *name)
 {
-  DBUG_ENTER("ha_example::delete_table");
+  DBUG_ENTER("ha_ckv::delete_table");
   /* This is not implemented but we want someone to be able that it works. */
   DBUG_RETURN(0);
 }
@@ -851,9 +851,9 @@ int ha_example::delete_table(const char *name)
   @see
   mysql_rename_table() in sql_table.cc
 */
-int ha_example::rename_table(const char * from, const char * to)
+int ha_ckv::rename_table(const char * from, const char * to)
 {
-  DBUG_ENTER("ha_example::rename_table ");
+  DBUG_ENTER("ha_ckv::rename_table ");
   DBUG_RETURN(HA_ERR_WRONG_COMMAND);
 }
 
@@ -871,10 +871,10 @@ int ha_example::rename_table(const char * from, const char * to)
   @see
   check_quick_keys() in opt_range.cc
 */
-ha_rows ha_example::records_in_range(uint inx, key_range *min_key,
+ha_rows ha_ckv::records_in_range(uint inx, key_range *min_key,
                                      key_range *max_key)
 {
-  DBUG_ENTER("ha_example::records_in_range");
+  DBUG_ENTER("ha_ckv::records_in_range");
   DBUG_RETURN(10);                         // low number to force index usage
 }
 
@@ -898,10 +898,10 @@ ha_rows ha_example::records_in_range(uint inx, key_range *min_key,
   ha_create_table() in handle.cc
 */
 
-int ha_example::create(const char *name, TABLE *table_arg,
+int ha_ckv::create(const char *name, TABLE *table_arg,
                        HA_CREATE_INFO *create_info)
 {
-  DBUG_ENTER("ha_example::create");
+  DBUG_ENTER("ha_ckv::create");
   /*
     This is not implemented but we want someone to be able to see that it
     works.
