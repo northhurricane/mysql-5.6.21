@@ -13,6 +13,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
-SET(EXAMPLE_PLUGIN_DYNAMIC "ha_ckv")
-SET(EXAMPLE_SOURCES ha_ckv.cc)
-MYSQL_ADD_PLUGIN(ckv ${EXAMPLE_SOURCES} STORAGE_ENGINE MODULE_ONLY)
+SET(CKV_PLUGIN_DYNAMIC "ha_ckv")
+SET(CKV_SOURCES ha_ckv.cc)
+MYSQL_ADD_PLUGIN(ckv ${CKV_SOURCES} STORAGE_ENGINE MODULE_ONLY)

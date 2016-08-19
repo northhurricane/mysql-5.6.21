@@ -17,74 +17,6 @@
   @file ha_ckv.cc
 
   @brief
-  The ha_ckv engine is a stubbed storage engine for example purposes only;
-  it does nothing at this point. Its purpose is to provide a source
-  code illustration of how to begin writing new storage engines; see also
-  /storage/example/ha_ckv.h.
-
-  @details
-  ha_ckv will let you create/open/delete tables, but
-  nothing further (for example, indexes are not supported nor can data
-  be stored in the table). Use this example as a template for
-  implementing the same functionality in your own storage engine. You
-  can enable the example storage engine in your build by doing the
-  following during your build process:<br> ./configure
-  --with-example-storage-engine
-
-  Once this is done, MySQL will let you create tables with:<br>
-  CREATE TABLE <table name> (...) ENGINE=EXAMPLE;
-
-  The example storage engine is set up to use table locks. It
-  implements an example "SHARE" that is inserted into a hash by table
-  name. You can use this to store information of state that any
-  example handler object will be able to see when it is using that
-  table.
-
-  Please read the object definition in ha_ckv.h before reading the rest
-  of this file.
-
-  @note
-  When you create an EXAMPLE table, the MySQL Server creates a table .frm
-  (format) file in the database directory, using the table name as the file
-  name as is customary with MySQL. No other files are created. To get an idea
-  of what occurs, here is an example select that would do a scan of an entire
-  table:
-
-  @code
-  ha_ckv::store_lock
-  ha_ckv::external_lock
-  ha_ckv::info
-  ha_ckv::rnd_init
-  ha_ckv::extra
-  ENUM HA_EXTRA_CACHE        Cache record in HA_rrnd()
-  ha_ckv::rnd_next
-  ha_ckv::rnd_next
-  ha_ckv::rnd_next
-  ha_ckv::rnd_next
-  ha_ckv::rnd_next
-  ha_ckv::rnd_next
-  ha_ckv::rnd_next
-  ha_ckv::rnd_next
-  ha_ckv::rnd_next
-  ha_ckv::extra
-  ENUM HA_EXTRA_NO_CACHE     End caching of records (def)
-  ha_ckv::external_lock
-  ha_ckv::extra
-  ENUM HA_EXTRA_RESET        Reset database to after open
-  @endcode
-
-  Here you see that the example storage engine has 9 rows called before
-  rnd_next signals that it has reached the end of its data. Also note that
-  the table in question was already opened; had it not been open, a call to
-  ha_ckv::open() would also have been necessary. Calls to
-  ha_ckv::extra() are hints as to what will be occuring to the request.
-
-  A Longer Example can be found called the "Skeleton Engine" which can be 
-  found on TangentOrg. It has both an engine and a full build environment
-  for building a pluggable storage engine.
-
-  Happy coding!<br>
-    -Brian
 */
 
 #include "sql_priv.h"
@@ -93,15 +25,15 @@
 #include "probes_mysql.h"
 #include "sql_plugin.h"
 
-static handler *example_create_handler(handlerton *hton,
+static handler *ckv_create_handler(handlerton *hton,
                                        TABLE_SHARE *table, 
                                        MEM_ROOT *mem_root);
 
-handlerton *example_hton;
+handlerton *ckv_hton;
 
 /* Interface to mysqld, to check system tables supported by SE */
-static const char* example_system_database();
-static bool example_is_supported_system_table(const char *db,
+static const char* ckv_system_database();
+static bool ckv_is_supported_system_table(const char *db,
                                       const char *table_name,
                                       bool is_sql_layer_system_table);
 #ifdef HAVE_PSI_INTERFACE
@@ -130,20 +62,20 @@ Ckv_share::Ckv_share()
 }
 
 
-static int example_init_func(void *p)
+static int ckv_init_func(void *p)
 {
-  DBUG_ENTER("example_init_func");
+  DBUG_ENTER("ckv_init_func");
 
 #ifdef HAVE_PSI_INTERFACE
   init_example_psi_keys();
 #endif
 
-  example_hton= (handlerton *)p;
-  example_hton->state=                     SHOW_OPTION_YES;
-  example_hton->create=                    example_create_handler;
-  example_hton->flags=                     HTON_CAN_RECREATE;
-  example_hton->system_database=   example_system_database;
-  example_hton->is_supported_system_table= example_is_supported_system_table;
+  ckv_hton= (handlerton *)p;
+  ckv_hton->state=                     SHOW_OPTION_YES;
+  ckv_hton->create=                    ckv_create_handler;
+  ckv_hton->flags=                     HTON_CAN_RECREATE;
+  ckv_hton->system_database=   ckv_system_database;
+  ckv_hton->is_supported_system_table= ckv_is_supported_system_table;
 
   DBUG_RETURN(0);
 }
@@ -178,7 +110,7 @@ err:
 }
 
 
-static handler* example_create_handler(handlerton *hton,
+static handler* ckv_create_handler(handlerton *hton,
                                        TABLE_SHARE *table, 
                                        MEM_ROOT *mem_root)
 {
@@ -208,13 +140,13 @@ ha_ckv::ha_ckv(handlerton *hton, TABLE_SHARE *table_arg)
   delete_table method in handler.cc
 */
 
-static const char *ha_example_exts[] = {
+static const char *ha_ckv_exts[] = {
   NullS
 };
 
 const char **ha_ckv::bas_ext() const
 {
-  return ha_example_exts;
+  return ha_ckv_exts;
 }
 
 /*
@@ -222,24 +154,11 @@ const char **ha_ckv::bas_ext() const
   system database specific to SE. This interface
   is optional, so every SE need not implement it.
 */
-const char* ha_example_system_database= NULL;
-const char* example_system_database()
+const char* ckv_system_database()
 {
-  return ha_example_system_database;
+  //No system database
+  return NULL;
 }
-
-/*
-  List of all system tables specific to the SE.
-  Array element would look like below,
-     { "<database_name>", "<system table name>" },
-  The last element MUST be,
-     { (const char*)NULL, (const char*)NULL }
-
-  This array is optional, so every SE need not implement it.
-*/
-static st_system_tablename ha_example_system_tables[]= {
-  {(const char*)NULL, (const char*)NULL}
-};
 
 /**
   @brief Check if the given db.tablename is a system table for this SE.
@@ -253,26 +172,11 @@ static st_system_tablename ha_example_system_tables[]= {
     @retval TRUE   Given db.table_name is supported system table.
     @retval FALSE  Given db.table_name is not a supported system table.
 */
-static bool example_is_supported_system_table(const char *db,
+static bool ckv_is_supported_system_table(const char *db,
                                               const char *table_name,
                                               bool is_sql_layer_system_table)
 {
-  st_system_tablename *systab;
-
-  // Does this SE support "ALL" SQL layer system tables ?
-  if (is_sql_layer_system_table)
-    return false;
-
-  // Check if this is SE layer system tables
-  systab= ha_example_system_tables;
-  while (systab && systab->db)
-  {
-    if (systab->db == db &&
-        strcmp(systab->tablename, table_name) == 0)
-      return true;
-    systab++;
-  }
-
+  //Don't support system table
   return false;
 }
 
@@ -910,109 +814,22 @@ int ha_ckv::create(const char *name, TABLE *table_arg,
 }
 
 
-struct st_mysql_storage_engine example_storage_engine=
+struct st_mysql_storage_engine ckv_storage_engine=
 { MYSQL_HANDLERTON_INTERFACE_VERSION };
-
-static ulong srv_enum_var= 0;
-static ulong srv_ulong_var= 0;
-static double srv_double_var= 0;
-
-const char *enum_var_names[]=
-{
-  "e1", "e2", NullS
-};
-
-TYPELIB enum_var_typelib=
-{
-  array_elements(enum_var_names) - 1, "enum_var_typelib",
-  enum_var_names, NULL
-};
-
-static MYSQL_SYSVAR_ENUM(
-  enum_var,                       // name
-  srv_enum_var,                   // varname
-  PLUGIN_VAR_RQCMDARG,            // opt
-  "Sample ENUM system variable.", // comment
-  NULL,                           // check
-  NULL,                           // update
-  0,                              // def
-  &enum_var_typelib);             // typelib
-
-static MYSQL_SYSVAR_ULONG(
-  ulong_var,
-  srv_ulong_var,
-  PLUGIN_VAR_RQCMDARG,
-  "0..1000",
-  NULL,
-  NULL,
-  8,
-  0,
-  1000,
-  0);
-
-static MYSQL_SYSVAR_DOUBLE(
-  double_var,
-  srv_double_var,
-  PLUGIN_VAR_RQCMDARG,
-  "0.500000..1000.500000",
-  NULL,
-  NULL,
-  8.5,
-  0.5,
-  1000.5,
-  0);                             // reserved always 0
-
-static MYSQL_THDVAR_DOUBLE(
-  double_thdvar,
-  PLUGIN_VAR_RQCMDARG,
-  "0.500000..1000.500000",
-  NULL,
-  NULL,
-  8.5,
-  0.5,
-  1000.5,
-  0);
-
-static struct st_mysql_sys_var* example_system_variables[]= {
-  MYSQL_SYSVAR(enum_var),
-  MYSQL_SYSVAR(ulong_var),
-  MYSQL_SYSVAR(double_var),
-  MYSQL_SYSVAR(double_thdvar),
-  NULL
-};
-
-// this is an example of SHOW_FUNC and of my_snprintf() service
-static int show_func_example(MYSQL_THD thd, struct st_mysql_show_var *var,
-                             char *buf)
-{
-  var->type= SHOW_CHAR;
-  var->value= buf; // it's of SHOW_VAR_FUNC_BUFF_SIZE bytes
-  my_snprintf(buf, SHOW_VAR_FUNC_BUFF_SIZE,
-              "enum_var is %lu, ulong_var is %lu, "
-              "double_var is %f, %.6b", // %b is a MySQL extension
-              srv_enum_var, srv_ulong_var, srv_double_var, "really");
-  return 0;
-}
-
-static struct st_mysql_show_var func_status[]=
-{
-  {"example_func_example",  (char *)show_func_example, SHOW_FUNC},
-  {0,0,SHOW_UNDEF}
-};
 
 mysql_declare_plugin(ckv)
 {
   MYSQL_STORAGE_ENGINE_PLUGIN,
-  &example_storage_engine,
+  &ckv_storage_engine,
   "CKV",
   "Jiangyx, Ctrip",
   "Ctrip key-value storage engine",
   PLUGIN_LICENSE_GPL,
-  example_init_func,                            /* Plugin Init */
+  ckv_init_func,                            /* Plugin Init */
   NULL,                                         /* Plugin Deinit */
   0x0001 /* 0.1 */,
-  func_status,                                  /* status variables */
-  example_system_variables,                     /* system variables */
+  NULL, //func_status,                                  /* status variables */
+  NULL, //example_system_variables,                     /* system variables */
   NULL,                                         /* config options */
   0,                                            /* flags */
 }
