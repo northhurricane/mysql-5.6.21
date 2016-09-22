@@ -61,6 +61,100 @@ Ckv_share::Ckv_share()
                    &mutex, MY_MUTEX_INIT_FAST);
 }
 
+#define CKV_KEY_COLUMN_NAME "k"
+#define CKV_VALUE_COLUMN_NAME "v"
+
+static int
+ckv_check_create_info(TABLE *table_arg, HA_CREATE_INFO *create_info)
+{
+  //进行列检查
+  Field *rfield;
+  int column_index = 0;
+  for (Field **field= table_arg->s->field; *field; field++)
+  {
+    rfield = *field;
+
+    //必须存在一个用于
+    enum_field_types type = rfield->type();
+    if (MYSQL_TYPE_VARCHAR != type)
+    {
+      my_error(ER_CHECK_NOT_IMPLEMENTED, MYF(0), " this type. Varchar only");
+      return (HA_ERR_UNSUPPORTED);
+    }
+
+    //现阶段不允许存在null的列
+    if (rfield->real_maybe_null())
+    {
+      my_error(ER_CHECK_NOT_IMPLEMENTED, MYF(0), " nullable column");
+      return (HA_ERR_UNSUPPORTED);
+    }
+    column_index++;
+    if (column_index == 1)
+    {
+      if (strcasecmp(rfield->field_name, CKV_KEY_COLUMN_NAME) != 0)
+      {
+        my_error(ER_CHECK_NOT_IMPLEMENTED, MYF(0),
+                 "this column name.First column name must be 'key'");
+        return (HA_ERR_UNSUPPORTED);
+      }
+    }
+    else if (column_index == 2)
+    {
+      if (strcasecmp(rfield->field_name, CKV_VALUE_COLUMN_NAME) != 0)
+      {
+        my_error(ER_CHECK_NOT_IMPLEMENTED, MYF(0),
+                 "this column name.Second column name must be 'v'");
+        return (HA_ERR_UNSUPPORTED);
+      }
+    }
+    else
+    {
+      my_error(ER_CHECK_NOT_IMPLEMENTED, MYF(0), "more than 2 column table");
+      return (HA_ERR_UNSUPPORTED);
+    }
+  }
+  if (column_index == 1)
+  {
+      my_error(ER_CHECK_NOT_IMPLEMENTED, MYF(0), "less than 2 column table");
+      return (HA_ERR_UNSUPPORTED);
+  }
+
+  //如果带有index的信息，进行index信息的查询
+  if (table_arg->s->keys > 1)
+  {
+    my_error(ER_CHECK_NOT_IMPLEMENTED, MYF(0)
+             , " more than one index.");
+    return (HA_ERR_UNSUPPORTED);
+  }
+  else
+  {
+    KEY *index = table_arg->s->key_info;
+    if (index->actual_key_parts != 1)
+    {
+      my_error(ER_CHECK_NOT_IMPLEMENTED, MYF(0)
+               , "more than one key column.");
+      return (HA_ERR_UNSUPPORTED);
+    }
+
+    if (index->actual_key_parts != index->usable_key_parts)
+    {
+      my_error(ER_CHECK_NOT_IMPLEMENTED, MYF(0)
+               , " index defination.");
+      return (HA_ERR_UNSUPPORTED);
+    }
+
+    if (strcmp(index->key_part[0].field->field_name
+               , CKV_KEY_COLUMN_NAME) != 0)
+    {
+      my_error(ER_CHECK_NOT_IMPLEMENTED, MYF(0)
+               , " key not on first column");
+      return (HA_ERR_UNSUPPORTED);
+    }
+  }
+
+  return 0;
+}
+
 
 static int ckv_init_func(void *p)
 {
@@ -443,13 +537,17 @@ int ha_ckv::index_last(uchar *buf)
 int ha_ckv::rnd_init(bool scan)
 {
   DBUG_ENTER("ha_ckv::rnd_init");
-  DBUG_RETURN(0);
+  my_error(ER_CHECK_NOT_IMPLEMENTED, MYF(0),
+           "table scan initialize");
+  DBUG_RETURN(HA_ERR_UNSUPPORTED);
 }
 
 int ha_ckv::rnd_end()
 {
   DBUG_ENTER("ha_ckv::rnd_end");
-  DBUG_RETURN(0);
+  my_error(ER_CHECK_NOT_IMPLEMENTED, MYF(0),
+           "table scan deinitialize");
+  DBUG_RETURN(HA_ERR_UNSUPPORTED);
 }
 
 
@@ -736,7 +834,7 @@ THR_LOCK_DATA **ha_ckv::store_lock(THD *thd,
 int ha_ckv::delete_table(const char *name)
 {
   DBUG_ENTER("ha_ckv::delete_table");
-  /* This is not implemented but we want someone to be able that it works. */
+  //删除kv数据库
   DBUG_RETURN(0);
 }
 
@@ -807,9 +905,14 @@ int ha_ckv::create(const char *name, TABLE *table_arg,
 {
   DBUG_ENTER("ha_ckv::create");
   /*
-    This is not implemented but we want someone to be able to see that it
-    works.
+    创建kv数据库
   */
+  int r = ckv_check_create_info(table_arg, create_info);
+  if (r != 0)
+  {
+    DBUG_RETURN(r);
+  }
+
   DBUG_RETURN(0);
 }
 
